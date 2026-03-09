@@ -1,0 +1,82 @@
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;0,800;1,400;1,600&family=DM+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background-color: #0d0b1a;
+  color: #e2dff5;
+  font-family: 'DM Sans', system-ui, sans-serif;
+  min-height: 100vh;
+  background-image:
+    radial-gradient(ellipse at 15% 20%, rgba(139,92,246,0.12) 0%, transparent 50%),
+    radial-gradient(ellipse at 85% 80%, rgba(236,72,153,0.08) 0%, transparent 50%);
+}
+
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: #13102a; }
+::-webkit-scrollbar-thumb { background: #3d3568; border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: #8b5cf6; }
+
+.font-display { font-family: 'Playfair Display', Georgia, serif; }
+
+/* Glass card */
+.glass {
+  background: linear-gradient(135deg, rgba(26,22,48,0.9) 0%, rgba(19,16,42,0.95) 100%);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(139,92,246,0.2);
+}
+
+/* Purple glow button */
+.btn-accent {
+  background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+  box-shadow: 0 0 30px rgba(139,92,246,0.4);
+  transition: all 0.2s ease;
+}
+.btn-accent:hover {
+  box-shadow: 0 0 45px rgba(139,92,246,0.6);
+  transform: translateY(-1px);
+}
+
+/* Input */
+.input-field {
+  background: rgba(13,11,26,0.8);
+  border: 1px solid rgba(139,92,246,0.25);
+  transition: all 0.2s ease;
+}
+.input-field:focus {
+  border-color: #8b5cf6;
+  box-shadow: 0 0 0 3px rgba(139,92,246,0.15);
+  outline: none;
+}
+
+/* Sidebar active link */
+.nav-active {
+  background: rgba(139,92,246,0.15);
+  border: 1px solid rgba(139,92,246,0.3);
+  color: #c4b5fd;
+}
+
+/* Animated background orb */
+@keyframes float {
+  0%, 100% { transform: translateY(0px) scale(1); }
+  50% { transform: translateY(-20px) scale(1.05); }
+}
+
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 30px rgba(139,92,246,0.3); }
+  50% { box-shadow: 0 0 60px rgba(139,92,246,0.6); }
+}
+
+.animate-float { animation: float 6s ease-in-out infinite; }
+.animate-pulse-glow { animation: pulse-glow 3s ease-in-out infinite; }
+
+.count-up { font-variant-numeric: tabular-nums; }

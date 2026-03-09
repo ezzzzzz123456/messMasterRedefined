@@ -1,0 +1,14 @@
+{
+  "name": "messmaster",
+  "version": "1.0.0",
+  "description": "Hostel Mess Food Wastage Tracker & Intelligence Platform",
+  "scripts": {
+    "dev": "node scripts/dev.js",
+    "server": "cd server && npm run dev",
+    "client": "cd client && npm run dev",
+    "seed": "cd server && node scripts/seed.js",
+    "build": "cd client && npm run build",
+    "install:all": "npm install && cd server && npm install && cd ../client && npm install"
+  },
+  "devDependencies": {}
+}
