@@ -10,7 +10,7 @@ export default function RegisterSelect() {
         <h1 className="font-display text-3xl font-bold text-primary mb-2">Register</h1>
         <p className="text-muted text-sm mb-8">Select registration type</p>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <Link to="/register/student" className="rounded-2xl p-6 border border-border/50 hover:border-accent/50 transition-colors">
             <p className="text-lg font-semibold text-primary mb-1">Student Register</p>
             <p className="text-sm text-muted">Join existing mess and submit feedback</p>
@@ -22,6 +22,10 @@ export default function RegisterSelect() {
           <Link to="/register/ngo" className="rounded-2xl p-6 border border-border/50 hover:border-accent/50 transition-colors">
             <p className="text-lg font-semibold text-primary mb-1">NGO Register</p>
             <p className="text-sm text-muted">Create NGO account for food requests</p>
+          </Link>
+          <Link to="/register/bio" className="rounded-2xl p-6 border border-border/50 hover:border-accent/50 transition-colors">
+            <p className="text-lg font-semibold text-primary mb-1">BioLoop Register</p>
+            <p className="text-sm text-muted">Create a biogas marketplace account</p>
           </Link>
         </div>
       </div>

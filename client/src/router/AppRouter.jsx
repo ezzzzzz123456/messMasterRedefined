@@ -3,15 +3,18 @@ import { useEffect } from 'react'
 import useAuthStore from '../store/useAuthStore'
 
 import Landing from '../pages/Landing'
+import BioLoop from '../pages/BioLoop'
 import Review from '../pages/Review'
 import AboutUs from '../pages/AboutUs'
 import LoginSelect from '../pages/LoginSelect'
 import StaffLogin from '../pages/StaffLogin'
 import StudentLogin from '../pages/StudentLogin'
+import BioLogin from '../pages/BioLogin'
 import RegisterSelect from '../pages/RegisterSelect'
 import RegisterStudent from '../pages/RegisterStudent'
 import RegisterMess from '../pages/RegisterMess'
 import RegisterNGO from '../pages/RegisterNGO'
+import RegisterBio from '../pages/RegisterBio'
 import SetupWizard from '../pages/SetupWizard'
 import DashboardLayout from '../components/layout/DashboardLayout'
 import Overview from '../pages/dashboard/Overview'
@@ -24,10 +27,15 @@ import SetupPage from '../pages/dashboard/SetupPage'
 import FoodListings from '../pages/dashboard/FoodListings'
 import RequestsPage from '../pages/dashboard/RequestsPage'
 import OrdersPage from '../pages/dashboard/OrdersPage'
+import BioLoopWaste from '../pages/dashboard/BioLoopWaste'
+import BioLoopRequestsPage from '../pages/dashboard/BioLoopRequestsPage'
+import BioLoopOrdersPage from '../pages/dashboard/BioLoopOrdersPage'
 import StudentPortal from '../pages/student/StudentPortal'
 import NGOLogin from '../pages/NGOLogin'
 import NGODashboard from '../pages/ngo/NGODashboard'
 import MessDetail from '../pages/ngo/MessDetail'
+import BioDashboard from '../pages/bio/BioDashboard'
+import BioListingDetail from '../pages/bio/BioListingDetail'
 
 const ProtectedRoute = ({ children, role }) => {
   const { user, isLoading } = useAuthStore()
@@ -46,6 +54,7 @@ const ProtectedRoute = ({ children, role }) => {
   if (role && user.role !== role) {
     if (user.role === 'staff') return <Navigate to="/dashboard/overview" replace />
     if (user.role === 'ngo') return <Navigate to="/ngo/dashboard" replace />
+    if (user.role === 'bio') return <Navigate to="/bio/dashboard" replace />
     return <Navigate to="/student/feedback" replace />
   }
   return children
@@ -59,6 +68,7 @@ export default function AppRouter() {
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<Landing />} />
+        <Route path="/bioloop" element={<BioLoop />} />
         <Route path="/review" element={<Review />} />
         <Route path="/about-us" element={<AboutUs />} />
         <Route path="/student-portal" element={<Navigate to="/login/student" replace />} />
@@ -67,6 +77,7 @@ export default function AppRouter() {
         <Route path="/login/staff" element={<StaffLogin />} />
         <Route path="/login/student" element={<StudentLogin />} />
         <Route path="/login/ngo" element={<NGOLogin />} />
+        <Route path="/login/bio" element={<BioLogin />} />
         <Route path="/mess/login" element={<Navigate to="/login/mess" replace />} />
         <Route path="/staff/login" element={<Navigate to="/login/staff" replace />} />
         <Route path="/student/login" element={<Navigate to="/login/student" replace />} />
@@ -74,6 +85,7 @@ export default function AppRouter() {
         <Route path="/register/student" element={<RegisterStudent />} />
         <Route path="/register/mess" element={<RegisterMess />} />
         <Route path="/register/ngo" element={<RegisterNGO />} />
+        <Route path="/register/bio" element={<RegisterBio />} />
         <Route path="/setup" element={
           <ProtectedRoute role="staff"><SetupWizard /></ProtectedRoute>
         } />
@@ -90,6 +102,9 @@ export default function AppRouter() {
           <Route path="listings" element={<FoodListings />} />
           <Route path="requests" element={<RequestsPage />} />
           <Route path="orders" element={<OrdersPage />} />
+          <Route path="bioloop" element={<BioLoopWaste />} />
+          <Route path="bioloop-requests" element={<BioLoopRequestsPage />} />
+          <Route path="bioloop-orders" element={<BioLoopOrdersPage />} />
           <Route path="setup" element={<SetupPage />} />
         </Route>
         <Route path="/student/feedback" element={
@@ -100,6 +115,12 @@ export default function AppRouter() {
         } />
         <Route path="/ngo/mess/:listingId" element={
           <ProtectedRoute role="ngo"><MessDetail /></ProtectedRoute>
+        } />
+        <Route path="/bio/dashboard" element={
+          <ProtectedRoute role="bio"><BioDashboard /></ProtectedRoute>
+        } />
+        <Route path="/bio/listing/:listingId" element={
+          <ProtectedRoute role="bio"><BioListingDetail /></ProtectedRoute>
         } />
         <Route path="/student" element={<Navigate to="/student/feedback" replace />} />
         <Route path="*" element={<Navigate to="/" replace />} />

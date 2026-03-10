@@ -4,17 +4,17 @@ import api from '../../api/axios'
 import useAuthStore from '../../store/useAuthStore'
 import NearbyMessesMap from '../../components/maps/NearbyMessesMap'
 
-export default function NGODashboard() {
+export default function BioDashboard() {
   const navigate = useNavigate()
   const { logout } = useAuthStore()
   const { data, isLoading, isError, error } = useQuery({
-    queryKey: ['ngo-nearby-listings'],
-    queryFn: () => api.get('/listings/public/nearby').then(r => r.data),
+    queryKey: ['bio-nearby-listings'],
+    queryFn: () => api.get('/bioloop/public/nearby').then((r) => r.data),
     refetchInterval: 5000,
   })
   const { data: requests } = useQuery({
-    queryKey: ['ngo-requests'],
-    queryFn: () => api.get('/requests/ngo').then(r => r.data),
+    queryKey: ['bio-requests'],
+    queryFn: () => api.get('/bioloop-requests/bio').then((r) => r.data),
     refetchInterval: 5000,
   })
 
@@ -23,8 +23,8 @@ export default function NGODashboard() {
       <div className="max-w-6xl mx-auto space-y-6">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="font-display text-3xl font-bold text-primary">NGO Dashboard</h1>
-            <p className="text-muted text-sm mt-1">Browse available food and track request status</p>
+            <h1 className="font-display text-3xl font-bold text-primary">BioLoop Dashboard</h1>
+            <p className="text-muted text-sm mt-1">Browse nearby dumped food waste and track purchase requests.</p>
           </div>
           <button onClick={async () => { await logout(); navigate('/') }} className="text-xs border border-border/50 rounded-lg px-3 py-1.5 text-muted">Sign Out</button>
         </div>
@@ -33,24 +33,35 @@ export default function NGODashboard() {
           <div className="rounded-2xl p-6 border border-border/50" style={{ background: 'rgba(19,16,42,0.9)' }}>
             <div className="flex items-start justify-between gap-4 mb-4">
               <div>
-                <h2 className="text-primary font-semibold">Nearby Mess Map</h2>
+                <h2 className="text-primary font-semibold">Nearby Waste Map</h2>
                 <p className="text-muted text-sm mt-1">
-                  Messes with active food listings within 20 km of {data?.center?.location || 'your NGO'}.
+                  Dumped and expired food waste listings within 50 km of {data?.center?.location || 'your plant'}.
                 </p>
               </div>
               <div className="text-right text-xs text-muted">
                 <p>Radius</p>
-                <p className="text-primary font-semibold">{data?.radiusKm || 20} km</p>
+                <p className="text-primary font-semibold">{data?.radiusKm || 50} km</p>
               </div>
             </div>
 
             {isError && (
               <div className="rounded-xl border border-red/30 bg-red/10 px-4 py-3 text-sm text-red">
-                {error?.response?.data?.error || 'Unable to load nearby mess map.'}
+                {error?.response?.data?.error || 'Unable to load nearby BioLoop map.'}
               </div>
             )}
 
-            {!isError && <NearbyMessesMap center={data?.center} messes={data?.messes || []} />}
+            {!isError && (
+              <NearbyMessesMap
+                center={data?.center}
+                messes={data?.messes || []}
+                centerTitle="Your BioLoop Plant"
+                centerLabel="B"
+                centerColor="#7c3aed"
+                listingLabel="W"
+                listingColor="#a78bfa"
+                emptyMessage="BioLoop location is unavailable."
+              />
+            )}
           </div>
 
           <div className="rounded-2xl p-6 border border-border/50" style={{ background: 'rgba(19,16,42,0.9)' }}>
@@ -66,40 +77,40 @@ export default function NGODashboard() {
                 </div>
               ))}
               {!data?.messes?.length && !isLoading && !isError && (
-                <p className="text-muted text-sm">No active mess listings found within 20 km.</p>
+                <p className="text-muted text-sm">No active BioLoop listings found within 50 km.</p>
               )}
             </div>
           </div>
         </div>
 
         <div className="rounded-2xl p-6 border border-border/50" style={{ background: 'rgba(19,16,42,0.9)' }}>
-          <h2 className="text-primary font-semibold mb-4">Available Mess Listings</h2>
+          <h2 className="text-primary font-semibold mb-4">Available Waste Listings</h2>
           {isLoading && <p className="text-muted text-sm">Loading listings...</p>}
           <div className="space-y-3">
-            {(data?.listings || []).map(l => (
-              <div key={l._id} className="p-4 rounded-xl border border-border/40 flex items-center justify-between">
+            {(data?.listings || []).map((listing) => (
+              <div key={listing._id} className="p-4 rounded-xl border border-border/40 flex items-center justify-between">
                 <div>
-                  <p className="text-primary font-semibold">{l.messId?.name} · {l.foodItem}</p>
-                  <p className="text-sm text-muted">{l.messId?.location} · {l.quantityAvailableKg} kg · ₹{l.ratePerKg}/kg</p>
+                  <p className="text-primary font-semibold">{listing.messId?.name} · {listing.itemName}</p>
+                  <p className="text-sm text-muted">{listing.messId?.location} · {listing.quantityAvailableKg} kg · ₹{listing.ratePerKg}/kg</p>
                 </div>
-                <Link to={`/ngo/mess/${l._id}`} className="text-xs px-3 py-1.5 rounded-lg bg-accent text-white">View</Link>
+                <Link to={`/bio/listing/${listing._id}`} className="text-xs px-3 py-1.5 rounded-lg bg-accent text-white">View</Link>
               </div>
             ))}
-            {!data?.listings?.length && !isLoading && !isError && <p className="text-muted text-sm">No active listings.</p>}
+            {!data?.listings?.length && !isLoading && !isError && <p className="text-muted text-sm">No BioLoop listings.</p>}
           </div>
         </div>
 
         <div className="rounded-2xl p-6 border border-border/50" style={{ background: 'rgba(19,16,42,0.9)' }}>
           <h2 className="text-primary font-semibold mb-4">My Requests</h2>
           <div className="space-y-3">
-            {(requests?.requests || []).map(r => (
-              <div key={r._id} className="p-4 rounded-xl border border-border/40">
-                <p className="text-primary font-semibold">{r.listingId?.foodItem || 'Food Item'}</p>
-                <p className="text-sm text-muted">Qty: {r.requestedQtyKg} kg · ₹{r.ratePerKg}/kg</p>
-                <p className="text-xs mt-1 uppercase text-accent-bright">Status: {r.status}</p>
+            {(requests?.requests || []).map((request) => (
+              <div key={request._id} className="p-4 rounded-xl border border-border/40">
+                <p className="text-primary font-semibold">{request.listingId?.itemName || 'Waste Listing'}</p>
+                <p className="text-sm text-muted">Qty: {request.requestedQtyKg} kg · Offer: ₹{request.offeredRatePerKg}/kg</p>
+                <p className="text-xs mt-1 uppercase text-accent-bright">Status: {request.status}</p>
               </div>
             ))}
-            {!requests?.requests?.length && <p className="text-muted text-sm">No requests yet.</p>}
+            {!requests?.requests?.length && <p className="text-muted text-sm">No BioLoop requests yet.</p>}
           </div>
         </div>
       </div>

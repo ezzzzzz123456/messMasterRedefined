@@ -10,6 +10,10 @@ const WasteLog = require('../src/models/WasteLog');
 const Feedback = require('../src/models/Feedback');
 const Inventory = require('../src/models/Inventory');
 const EnergyLog = require('../src/models/EnergyLog');
+const FoodListing = require('../src/models/FoodListing');
+const FoodRequest = require('../src/models/FoodRequest');
+const BioWasteListing = require('../src/models/BioWasteListing');
+const BioWasteRequest = require('../src/models/BioWasteRequest');
 
 const staffUsers = [
   { name: 'Ravi Kumar', email: 'ravi@mess.edu', password: 'staff123', role: 'staff' },
@@ -20,6 +24,38 @@ const studentUsers = [
   { name: 'Arjun Mehta', email: 'arjun@student.edu', password: 'stu123', role: 'student', rollNo: 'CS21B001', year: 3 },
   { name: 'Sneha Patel', email: 'sneha@student.edu', password: 'stu456', role: 'student', rollNo: 'EE21B042', year: 3 },
 ];
+
+const ngoUsers = [
+  {
+    name: 'Helping Hands Foundation',
+    organizationName: 'Helping Hands Foundation',
+    email: 'ngo@helpinghands.org',
+    password: 'ngo12345',
+    role: 'ngo',
+    location: 'Adyar, Chennai, Tamil Nadu',
+    latitude: 12.9981,
+    longitude: 80.2573,
+  },
+];
+
+const bioUsers = [
+  {
+    name: 'PurpleFuel Biogas',
+    organizationName: 'PurpleFuel Biogas',
+    email: 'bio@purplefuel.org',
+    password: 'bio12345',
+    role: 'bio',
+    location: 'Velachery, Chennai, Tamil Nadu',
+    latitude: 12.9791,
+    longitude: 80.2209,
+  },
+];
+
+const seedMessLocation = {
+  location: 'Hostel H4, IIT Campus, Chennai - 600036',
+  latitude: 12.9918,
+  longitude: 80.2337,
+};
 
 async function upsertUser(data) {
   const existing = await User.findOne({ email: data.email });
@@ -44,6 +80,10 @@ async function seed() {
 
   const [adminUser, secondStaff] = await Promise.all(staffUsers.map(upsertUser));
   console.log('Upserted staff users');
+  const [ngoUser] = await Promise.all(ngoUsers.map(upsertUser));
+  console.log('Upserted NGO users');
+  const [bioUser] = await Promise.all(bioUsers.map(upsertUser));
+  console.log('Upserted BioLoop users');
 
   let mess = await Mess.findOne({ name: 'Hostel H4 Mess' });
   if (!mess) {
@@ -52,7 +92,9 @@ async function seed() {
       capacity: 500,
       established: 2010,
       phone: '9876543210',
-      location: 'Hostel H4, IIT Campus, Chennai - 600036',
+      location: seedMessLocation.location,
+      latitude: seedMessLocation.latitude,
+      longitude: seedMessLocation.longitude,
       adminUserId: adminUser._id,
       adminContact: { name: 'Ravi Kumar', email: 'ravi@mess.edu', phone: '9876543210' },
       pointOfContact: { name: 'Mess Office', phone: '9876500000' },
@@ -63,6 +105,9 @@ async function seed() {
   } else {
     mess.adminUserId = adminUser._id;
     mess.isActive = true;
+    mess.location = seedMessLocation.location;
+    mess.latitude = seedMessLocation.latitude;
+    mess.longitude = seedMessLocation.longitude;
     await mess.save();
     console.log('Updated mess');
   }
@@ -82,6 +127,20 @@ async function seed() {
   }
   console.log('Upserted student users');
 
+  ngoUser.organizationName = ngoUsers[0].organizationName;
+  ngoUser.location = ngoUsers[0].location;
+  ngoUser.latitude = ngoUsers[0].latitude;
+  ngoUser.longitude = ngoUsers[0].longitude;
+  ngoUser.isSetupComplete = true;
+  await ngoUser.save();
+
+  bioUser.organizationName = bioUsers[0].organizationName;
+  bioUser.location = bioUsers[0].location;
+  bioUser.latitude = bioUsers[0].latitude;
+  bioUser.longitude = bioUsers[0].longitude;
+  bioUser.isSetupComplete = true;
+  await bioUser.save();
+
   await Promise.all([
     MenuItem.deleteMany({ messId: mess._id }),
     Staff.deleteMany({ messId: mess._id }),
@@ -89,6 +148,10 @@ async function seed() {
     Feedback.deleteMany({ messId: mess._id }),
     Inventory.deleteMany({ messId: mess._id }),
     EnergyLog.deleteMany({ messId: mess._id }),
+    FoodListing.deleteMany({ messId: mess._id }),
+    FoodRequest.deleteMany({ messId: mess._id }),
+    BioWasteListing.deleteMany({ messId: mess._id }),
+    BioWasteRequest.deleteMany({ messId: mess._id }),
   ]);
   console.log('Cleared old mess-linked sample data');
 
@@ -186,11 +249,87 @@ async function seed() {
   }
   await EnergyLog.insertMany(energyLogs);
 
+  const listings = await FoodListing.insertMany([
+    {
+      messId: mess._id,
+      createdBy: adminUser._id,
+      foodCategory: 'Breakfast',
+      foodItem: 'Aloo Paratha',
+      quantityAvailableKg: 18,
+      ratePerKg: 95,
+      notes: 'Fresh surplus from breakfast service',
+      isActive: true,
+    },
+    {
+      messId: mess._id,
+      createdBy: adminUser._id,
+      foodCategory: 'Main Course',
+      foodItem: 'Veg Biryani',
+      quantityAvailableKg: 24,
+      ratePerKg: 110,
+      notes: 'Packed and available for NGO pickup',
+      isActive: true,
+    },
+  ]);
+
+  await FoodRequest.create({
+    listingId: listings[0]._id,
+    messId: mess._id,
+    ngoId: ngoUser._id,
+    requestedQtyKg: 8,
+    ratePerKg: listings[0].ratePerKg,
+    status: 'pending',
+    isReadByMess: false,
+    isReadByNgo: true,
+  });
+
+  const bioWasteListings = await BioWasteListing.insertMany([
+    {
+      messId: mess._id,
+      createdBy: adminUser._id,
+      wasteType: 'dumped_food',
+      itemName: 'Mixed cooked rice waste',
+      quantityAvailableKg: 30,
+      ratePerKg: 28,
+      notes: 'Collected from end-of-day service.',
+      scheduledAt: new Date(Date.now() - 60 * 60 * 1000),
+      activatedAt: new Date(Date.now() - 60 * 60 * 1000),
+      availableUntil: new Date(Date.now() + 3 * 60 * 60 * 1000),
+      status: 'active',
+      isMarketplaceVisible: true,
+    },
+    {
+      messId: mess._id,
+      createdBy: adminUser._id,
+      wasteType: 'expired_food',
+      itemName: 'Expired bread and buns',
+      quantityAvailableKg: 12,
+      ratePerKg: 18,
+      notes: 'Packaged bakery waste.',
+      scheduledAt: new Date(Date.now() + 2 * 60 * 60 * 1000),
+      status: 'scheduled',
+      isMarketplaceVisible: false,
+    },
+  ]);
+
+  await BioWasteRequest.create({
+    listingId: bioWasteListings[0]._id,
+    messId: mess._id,
+    bioId: bioUser._id,
+    requestedQtyKg: 12,
+    offeredRatePerKg: 30,
+    status: 'pending',
+    isReadByMess: false,
+    isReadByBio: true,
+  });
+
   console.log('Seed complete');
   console.log('Staff login: ravi@mess.edu / staff123');
   console.log('Staff login: priya@mess.edu / staff456');
   console.log('Student login: arjun@student.edu / stu123');
   console.log('Student login: sneha@student.edu / stu456');
+  console.log('NGO login: ngo@helpinghands.org / ngo12345');
+  console.log('BioLoop login: bio@purplefuel.org / bio12345');
 }
 
 seed()

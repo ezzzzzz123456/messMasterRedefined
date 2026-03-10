@@ -1,8 +1,10 @@
 import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
+import BioLoopLogo from '../components/ui/BioLoopLogo'
 
 const NAV_ITEMS = [
   { label: 'Student Portal', to: '/login/student' },
+  { label: 'BioLoop', to: '/bioloop', icon: true },
   { label: 'About Us', to: '/about-us' },
 ]
 
@@ -19,7 +21,7 @@ const PORTALS = [
     description: 'Coordinate surplus food pickups seamlessly. Connect with dining halls to distribute fresh food to those in need.',
     to: '/login/ngo',
     icon: '🤝',
-    cta: 'Login / Portal',
+    cta: 'Login / Register',
   },
 ]
 
@@ -42,8 +44,9 @@ export default function Landing() {
           </Link>
           <nav className="flex items-center gap-6">
             {NAV_ITEMS.map(item => (
-              <Link key={item.label} to={item.to} className="text-sm text-muted hover:text-primary transition-colors">
-                {item.label}
+              <Link key={item.label} to={item.to} className="text-sm text-muted hover:text-primary transition-colors flex items-center gap-2">
+                {item.icon && <BioLoopLogo className="h-5 w-5 shrink-0" />}
+                <span>{item.label}</span>
               </Link>
             ))}
           </nav>

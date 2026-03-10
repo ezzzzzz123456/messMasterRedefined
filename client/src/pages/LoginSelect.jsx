@@ -7,7 +7,7 @@ export default function LoginSelect() {
         <h1 className="font-display text-3xl font-bold text-primary mb-2">Login</h1>
         <p className="text-muted text-sm mb-8">Choose your role to continue</p>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <Link to="/login/mess" className="rounded-2xl p-6 border border-border/50 hover:border-accent/50 transition-colors">
             <p className="text-lg font-semibold text-primary mb-1">Mess Login</p>
             <p className="text-sm text-muted">Dashboard, analytics, operations</p>
@@ -19,6 +19,10 @@ export default function LoginSelect() {
           <Link to="/login/ngo" className="rounded-2xl p-6 border border-border/50 hover:border-accent/50 transition-colors">
             <p className="text-lg font-semibold text-primary mb-1">NGO Login</p>
             <p className="text-sm text-muted">Request excess food listings</p>
+          </Link>
+          <Link to="/login/bio" className="rounded-2xl p-6 border border-border/50 hover:border-accent/50 transition-colors">
+            <p className="text-lg font-semibold text-primary mb-1">BioLoop Login</p>
+            <p className="text-sm text-muted">Purchase dumped waste for biogas generation</p>
           </Link>
         </div>
       </div>

@@ -9,6 +9,7 @@
     "seed": "cd server && node scripts/seed.js",
     "reset:seed": "cd server && node scripts/resetAndSeed.js",
     "migrate:admin-contact": "cd server && node scripts/migrate-admin-contact.js",
+    "migrate:location-geo": "cd server && node scripts/migrate-location-geo.js",
     "build": "cd client && npm run build",
     "install:all": "npm install && cd server && npm install && cd ../client && npm install"
   },

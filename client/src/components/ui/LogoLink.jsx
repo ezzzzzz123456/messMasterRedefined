@@ -6,6 +6,7 @@ const getTarget = (user) => {
   if (user.role === 'staff') return '/dashboard/overview'
   if (user.role === 'student') return '/student/feedback'
   if (user.role === 'ngo') return '/ngo/dashboard'
+  if (user.role === 'bio') return '/bio/dashboard'
   return '/'
 }
 

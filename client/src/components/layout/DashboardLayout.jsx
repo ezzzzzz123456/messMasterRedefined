@@ -3,7 +3,7 @@ import { motion } from 'framer-motion'
 import { useQuery } from '@tanstack/react-query'
 import {
   LayoutDashboard, ChefHat, Brain, ClipboardList,
-  MessageSquare, Package, Settings, LogOut, Menu, Bell, HandCoins, Inbox, ShoppingBag
+  MessageSquare, Package, Settings, LogOut, Menu, Bell, HandCoins, Inbox, ShoppingBag, Recycle
 } from 'lucide-react'
 import useAuthStore from '../../store/useAuthStore'
 import api from '../../api/axios'
@@ -19,6 +19,9 @@ const NAV = [
   { to: 'listings', icon: HandCoins, label: 'Food Listings' },
   { to: 'requests', icon: Inbox, label: 'Requests' },
   { to: 'orders', icon: ShoppingBag, label: 'Orders' },
+  { to: 'bioloop', icon: Recycle, label: 'BioLoop Waste' },
+  { to: 'bioloop-requests', icon: Inbox, label: 'BioLoop Requests' },
+  { to: 'bioloop-orders', icon: ShoppingBag, label: 'BioLoop Orders' },
   { to: 'setup', icon: Settings, label: 'Settings' },
 ]
 

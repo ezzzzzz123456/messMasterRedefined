@@ -77,7 +77,10 @@ export default function RegisterMess() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <input className="input-field rounded-xl px-4 py-3 text-sm" placeholder="Mess Name*" value={form.messName} onChange={e => setField('messName', e.target.value)} />
               <input className="input-field rounded-xl px-4 py-3 text-sm" placeholder="Phone Number*" value={form.phoneNumber} onChange={e => setField('phoneNumber', e.target.value)} />
-              <input className="input-field rounded-xl px-4 py-3 text-sm md:col-span-2" placeholder="Location*" value={form.location} onChange={e => setField('location', e.target.value)} />
+              <div className="md:col-span-2 space-y-2">
+                <input className="input-field rounded-xl px-4 py-3 text-sm w-full" placeholder="Location / Address*" value={form.location} onChange={e => setField('location', e.target.value)} />
+                <p className="text-[11px] text-muted">Use a complete address or recognizable area. This is geocoded and used to match nearby NGOs.</p>
+              </div>
               <input className="input-field rounded-xl px-4 py-3 text-sm" type="number" placeholder="Mess Capacity (optional)" value={form.messCapacity} onChange={e => setField('messCapacity', e.target.value)} />
             </div>
           </section>

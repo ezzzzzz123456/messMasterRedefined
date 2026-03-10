@@ -57,6 +57,44 @@ router.post('/', async (req, res, next) => {
   } catch (err) { next(err); }
 });
 
+router.patch('/:id', async (req, res, next) => {
+  try {
+    const { menuItemId, meal, wastedKg, preparedKg } = req.body;
+    if (!menuItemId || !meal || !wastedKg || !preparedKg) {
+      return res.status(400).json({ error: 'menuItemId, meal, wastedKg, preparedKg are required' });
+    }
+
+    const approvedItem = await MenuItem.findOne({
+      _id: menuItemId,
+      messId: req.user.messId,
+      isActive: true,
+    });
+    if (!approvedItem) {
+      return res.status(400).json({ error: 'Invalid or unapproved menu item selected' });
+    }
+
+    const log = await WasteLog.findOne({ _id: req.params.id, messId: req.user.messId });
+    if (!log) return res.status(404).json({ error: 'Waste log not found' });
+
+    log.meal = meal;
+    log.menuItemId = approvedItem._id;
+    log.menuItemName = approvedItem.name;
+    log.wastedKg = Number(wastedKg);
+    log.preparedKg = Number(preparedKg);
+    await log.save();
+
+    res.json(log);
+  } catch (err) { next(err); }
+});
+
+router.delete('/:id', async (req, res, next) => {
+  try {
+    const log = await WasteLog.findOneAndDelete({ _id: req.params.id, messId: req.user.messId });
+    if (!log) return res.status(404).json({ error: 'Waste log not found' });
+    res.json({ message: 'Waste log deleted', id: req.params.id });
+  } catch (err) { next(err); }
+});
+
 router.get('/weekly', async (req, res, next) => {
   try {
     const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);

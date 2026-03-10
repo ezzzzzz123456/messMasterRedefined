@@ -5,6 +5,7 @@ const Mess = require('../models/Mess');
 const MenuItem = require('../models/MenuItem');
 const Inventory = require('../models/Inventory');
 const Staff = require('../models/Staff');
+const { geocodeLocation } = require('../services/geocoding.service');
 
 const resolveAccessExpiry = () => {
   const configured = String(process.env.JWT_EXPIRES_IN || '').trim();
@@ -107,13 +108,67 @@ exports.registerNgo = async (req, res, next) => {
     const existing = await User.findOne({ email: normalizedEmail });
     if (existing) return res.status(400).json({ error: 'Email already registered' });
 
+    let resolvedLocation;
+    try {
+      resolvedLocation = await geocodeLocation(location);
+    } catch (error) {
+      return res.status(502).json({ error: 'Location lookup failed. Please try again shortly.' });
+    }
+    if (!resolvedLocation) {
+      return res.status(400).json({ error: 'Enter a valid NGO location that can be resolved on the map' });
+    }
+
     const user = await User.create({
       name: ngoName,
       organizationName: ngoName,
-      location,
+      location: resolvedLocation.displayName,
+      latitude: resolvedLocation.latitude,
+      longitude: resolvedLocation.longitude,
       email: normalizedEmail,
       password,
       role: 'ngo',
+      isSetupComplete: true,
+    });
+
+    const { accessToken, refreshToken } = generateTokens(user._id);
+    user.refreshToken = refreshToken;
+    await user.save();
+    res.status(201).json({ accessToken, refreshToken, user });
+  } catch (err) {
+    next(err);
+  }
+};
+
+exports.registerBio = async (req, res, next) => {
+  try {
+    const { organizationName, location, email, password } = req.body;
+    if (!organizationName || !location || !email || !password) {
+      return res.status(400).json({ error: 'organizationName, location, email, password are required' });
+    }
+
+    const normalizedEmail = String(email).trim().toLowerCase();
+    const existing = await User.findOne({ email: normalizedEmail });
+    if (existing) return res.status(400).json({ error: 'Email already registered' });
+
+    let resolvedLocation;
+    try {
+      resolvedLocation = await geocodeLocation(location);
+    } catch (error) {
+      return res.status(502).json({ error: 'Location lookup failed. Please try again shortly.' });
+    }
+    if (!resolvedLocation) {
+      return res.status(400).json({ error: 'Enter a valid BioLoop location that can be resolved on the map' });
+    }
+
+    const user = await User.create({
+      name: organizationName,
+      organizationName,
+      location: resolvedLocation.displayName,
+      latitude: resolvedLocation.latitude,
+      longitude: resolvedLocation.longitude,
+      email: normalizedEmail,
+      password,
+      role: 'bio',
       isSetupComplete: true,
     });
 
@@ -148,6 +203,16 @@ exports.registerMess = async (req, res, next) => {
     const existing = await User.findOne({ email: normalizedAdminEmail });
     if (existing) return res.status(400).json({ error: 'Admin email already registered' });
 
+    let resolvedLocation;
+    try {
+      resolvedLocation = await geocodeLocation(location);
+    } catch (error) {
+      return res.status(502).json({ error: 'Location lookup failed. Please try again shortly.' });
+    }
+    if (!resolvedLocation) {
+      return res.status(400).json({ error: 'Enter a valid mess location that can be resolved on the map' });
+    }
+
     let adminUser = null;
     let mess = null;
     const cleanMenuItems = Array.isArray(menuItems) ? menuItems.filter(Boolean).map(String).map(s => s.trim()).filter(Boolean) : [];
@@ -167,7 +232,9 @@ exports.registerMess = async (req, res, next) => {
     mess = await Mess.create({
       name: messName,
       phone: phoneNumber,
-      location,
+      location: resolvedLocation.displayName,
+      latitude: resolvedLocation.latitude,
+      longitude: resolvedLocation.longitude,
       capacity: messCapacity ? Number(messCapacity) : undefined,
       adminUserId: adminUser._id,
       adminContact: {

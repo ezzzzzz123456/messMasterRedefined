@@ -1,10 +1,14 @@
-import { useQuery } from '@tanstack/react-query'
+import { useState } from 'react'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { motion } from 'framer-motion'
 import { AreaChart, Area, LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, RadarChart, Radar, PolarGrid, PolarAngleAxis, CartesianGrid } from 'recharts'
+import toast from 'react-hot-toast'
 import api from '../../api/axios'
 import useAuthStore from '../../store/useAuthStore'
 import KPICard from '../../components/ui/KPICard'
 import Badge from '../../components/ui/Badge'
+import LogWaste from './LogWaste'
+import { invalidateWasteQueries } from '../../utils/wasteLog'
 
 const CustomTooltip = ({ active, payload, label }) => {
   if (!active || !payload?.length) return null
@@ -20,6 +24,8 @@ const CustomTooltip = ({ active, payload, label }) => {
 
 export default function Overview() {
   const { user } = useAuthStore()
+  const qc = useQueryClient()
+  const [editingLog, setEditingLog] = useState(null)
 
   const { data: kpis } = useQuery({
     queryKey: ['overview'],
@@ -43,6 +49,16 @@ export default function Overview() {
     queryFn: () => api.get('/waste-logs?limit=5').then(r => r.data),
   })
 
+  const deleteMutation = useMutation({
+    mutationFn: (logId) => api.delete(`/waste-logs/${logId}`),
+    onSuccess: (_, logId) => {
+      toast.success('Waste log deleted')
+      if (editingLog?._id === logId) setEditingLog(null)
+      invalidateWasteQueries(qc)
+    },
+    onError: (err) => toast.error(err.response?.data?.error || 'Delete failed'),
+  })
+
   const trendFormatted = trend?.map(d => ({
     date: d._id,
     wasted: parseFloat(d.wastedKg?.toFixed(1) || 0),
@@ -52,6 +68,11 @@ export default function Overview() {
   const radarData = ['Breakfast', 'Lunch', 'Snacks', 'Dinner'].map(meal => ({
     meal, waste: parseFloat(mealData?.find(m => m._id === meal)?.avgWaste?.toFixed(1) || 0),
   }))
+
+  const handleDelete = (log) => {
+    if (!window.confirm(`Delete waste log for ${log.menuItemId?.name || log.menuItemName || log.item}?`)) return
+    deleteMutation.mutate(log._id)
+  }
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
@@ -63,9 +84,8 @@ export default function Overview() {
       </div>
 
       {/* Charts row */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        {/* Trend Chart */}
-        <div className="lg:col-span-2 rounded-2xl p-6" style={{ background: 'linear-gradient(135deg, rgba(26,22,48,0.9), rgba(19,16,42,0.95))', border: '1px solid rgba(139,92,246,0.15)' }}>
+      <div className="grid grid-cols-1 gap-4">
+        <div className="rounded-2xl p-6" style={{ background: 'linear-gradient(135deg, rgba(26,22,48,0.9), rgba(19,16,42,0.95))', border: '1px solid rgba(139,92,246,0.15)' }}>
           <div className="flex items-center justify-between mb-6">
             <h3 className="font-display font-bold text-lg text-primary">Wastage Trends (Actual Data)</h3>
             <div className="flex items-center gap-4 text-xs text-muted">
@@ -73,7 +93,7 @@ export default function Overview() {
               <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full" style={{ background: '#38bdf8' }} />Prepared</span>
             </div>
           </div>
-          <ResponsiveContainer width="100%" height={200}>
+          <ResponsiveContainer width="100%" height={300}>
             <AreaChart data={trendFormatted} margin={{ top: 5, right: 10, left: -20, bottom: 0 }}>
               <defs>
                 <linearGradient id="wasted" x1="0" y1="0" x2="0" y2="1">
@@ -94,33 +114,6 @@ export default function Overview() {
             </AreaChart>
           </ResponsiveContainer>
         </div>
-
-        {/* Inventory Alerts */}
-        <div className="rounded-2xl p-6" style={{ background: 'linear-gradient(135deg, rgba(26,22,48,0.9), rgba(19,16,42,0.95))', border: '1px solid rgba(139,92,246,0.15)' }}>
-          <div className="flex items-center gap-2 mb-5">
-            <h3 className="font-display font-bold text-lg text-primary">Live Inventory Alerts</h3>
-            <span className="flex h-2 w-2 relative">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-red"></span>
-            </span>
-          </div>
-          <div className="space-y-3">
-            {[
-              { type: 'red', label: 'Low Stock: Milk', desc: 'Only 15L remaining. Restock before dinner.' },
-              { type: 'yellow', label: 'Expiring Soon: Bread', desc: '40 loaves expiring tomorrow.' },
-              { type: 'blue', label: 'New Shipment', desc: 'Rice sacks (500kg) arriving at 2 PM.' },
-            ].map((a, i) => (
-              <div key={i} className="p-3 rounded-xl flex gap-3 items-start transition-colors"
-                style={{ background: `rgba(${a.type === 'red' ? '239,68,68' : a.type === 'yellow' ? '245,158,11' : '56,189,248'},0.05)`, borderLeft: `2px solid ${a.type === 'red' ? '#ef4444' : a.type === 'yellow' ? '#f59e0b' : '#38bdf8'}` }}>
-                <span className="text-base">{a.type === 'red' ? '⚠️' : a.type === 'yellow' ? '⏱️' : '🚚'}</span>
-                <div>
-                  <p className="text-sm font-semibold text-primary">{a.label}</p>
-                  <p className="text-xs text-muted mt-0.5">{a.desc}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
       </div>
 
       {/* Bottom row */}
@@ -138,6 +131,7 @@ export default function Overview() {
                 <th className="pb-3 font-semibold">Item</th>
                 <th className="pb-3 font-semibold text-right">Qty (kg)</th>
                 <th className="pb-3 font-semibold text-right">Time</th>
+                <th className="pb-3 font-semibold text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border/30">
@@ -151,30 +145,34 @@ export default function Overview() {
                   <td className="py-3 text-muted">{log.menuItemId?.name || log.menuItemName || log.item}</td>
                   <td className={`py-3 text-right font-mono font-medium ${log.wastedKg > 10 ? 'text-red' : log.wastedKg > 5 ? 'text-yellow' : 'text-green'}`}>{log.wastedKg}</td>
                   <td className="py-3 text-right text-xs text-muted font-mono">{new Date(log.createdAt).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}</td>
+                  <td className="py-3">
+                    <div className="flex items-center justify-end gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setEditingLog(log)}
+                        className="text-[11px] px-2.5 py-1.5 rounded-lg border border-accent/30 text-accent-bright hover:bg-accent/10 transition-colors"
+                      >
+                        Edit
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleDelete(log)}
+                        disabled={deleteMutation.isPending && deleteMutation.variables === log._id}
+                        className="text-[11px] px-2.5 py-1.5 rounded-lg border border-red/30 text-red hover:bg-red/10 transition-colors disabled:opacity-60"
+                      >
+                        {deleteMutation.isPending && deleteMutation.variables === log._id ? 'Deleting...' : 'Delete'}
+                      </button>
+                    </div>
+                  </td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
 
-        {/* Quick Actions */}
+        {/* Waste Log */}
         <div className="rounded-2xl p-6" style={{ background: 'linear-gradient(135deg, rgba(26,22,48,0.9), rgba(19,16,42,0.95))', border: '1px solid rgba(139,92,246,0.15)' }}>
-          <h3 className="font-display font-bold text-lg text-primary mb-5">Quick Actions</h3>
-          <div className="grid grid-cols-2 gap-3">
-            {[
-              { label: 'Log Waste', icon: '📋', path: '/dashboard/log-waste', color: 'accent' },
-              { label: 'Edit Menu', icon: '📅', path: '/dashboard/setup', color: 'blue' },
-              { label: 'Order Stock', icon: '📦', path: '/dashboard/inventory', color: 'pink' },
-              { label: 'Reports', icon: '📊', path: '/dashboard/menu-analysis', color: 'green' },
-            ].map(a => (
-              <a key={a.label} href={a.path}
-                className="flex flex-col items-center justify-center p-5 rounded-xl border border-border/50 hover:border-accent/30 transition-all group cursor-pointer"
-                style={{ background: 'rgba(13,11,26,0.5)' }}>
-                <span className="text-3xl mb-2 group-hover:scale-110 transition-transform">{a.icon}</span>
-                <span className="text-sm font-semibold text-muted group-hover:text-primary transition-colors">{a.label}</span>
-              </a>
-            ))}
-          </div>
+          <LogWaste embedded editingLog={editingLog} onEditCleared={() => setEditingLog(null)} />
         </div>
       </div>
 

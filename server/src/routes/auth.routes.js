@@ -8,11 +8,12 @@ router.post('/register', [
   body('name').trim().notEmpty().withMessage('Name is required'),
   body('email').isEmail().withMessage('Valid email required'),
   body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters'),
-  body('role').optional().isIn(['staff', 'student', 'ngo', 'Staff', 'Student', 'NGO']).withMessage('Role must be staff/student/ngo'),
+  body('role').optional().isIn(['staff', 'student', 'ngo', 'bio', 'Staff', 'Student', 'NGO', 'Bio']).withMessage('Role must be staff/student/ngo/bio'),
 ], authController.register);
 router.post('/register/student', authController.registerStudent);
 router.post('/register/mess', authController.registerMess);
 router.post('/register/ngo', authController.registerNgo);
+router.post('/register/bio', authController.registerBio);
 router.get('/register/messes', authController.listMessesForRegistration);
 
 router.post('/login', [

@@ -16,6 +16,8 @@ const oracleRoutes = require('./routes/oracle.routes');
 const analyticsRoutes = require('./routes/analytics.routes');
 const listingRoutes = require('./routes/listing.routes');
 const requestRoutes = require('./routes/request.routes');
+const bioLoopRoutes = require('./routes/bioloop.routes');
+const bioLoopRequestRoutes = require('./routes/bioloop-request.routes');
 const errorMiddleware = require('./middleware/error.middleware');
 
 const app = express();
@@ -60,6 +62,8 @@ app.use('/api/v1/oracle', oracleRoutes);
 app.use('/api/v1/analytics', analyticsRoutes);
 app.use('/api/v1/listings', listingRoutes);
 app.use('/api/v1/requests', requestRoutes);
+app.use('/api/v1/bioloop', bioLoopRoutes);
+app.use('/api/v1/bioloop-requests', bioLoopRequestRoutes);
 
 app.get('/api/v1/health', (req, res) => {
   res.json({ status: 'OK', version: '1.0.0', app: 'MessMaster' });
