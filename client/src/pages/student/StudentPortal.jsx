@@ -1,12 +1,13 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useForm } from 'react-hook-form'
 import { useQuery } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
-import { Link } from 'react-router-dom'
+import { QRCodeSVG } from 'qrcode.react'
 import api from '../../api/axios'
 import useAuthStore from '../../store/useAuthStore'
 import Stars from '../../components/ui/Stars'
+import LogoLink from '../../components/ui/LogoLink'
 
 export default function StudentPortal() {
   const { user, logout } = useAuthStore()
@@ -18,7 +19,7 @@ export default function StudentPortal() {
       portion: 0,
       freshness: 0,
       meal: 'Lunch',
-      selectedDate: new Date().toISOString().slice(0, 10),
+      messId: user?.messId || '',
     },
   })
   const [submitted, setSubmitted] = useState(false)
@@ -28,6 +29,19 @@ export default function StudentPortal() {
     queryFn: () => api.get('/feedback/my-history').then(r => r.data),
     enabled: activeTab === 'history',
   })
+  const { data: messes } = useQuery({
+    queryKey: ['feedback-messes'],
+    queryFn: () => api.get('/auth/register/messes').then(r => r.data),
+  })
+
+  useEffect(() => {
+    const list = messes?.messes || []
+    if (user?.messId) {
+      setValue('messId', user.messId)
+      return
+    }
+    if (list.length) setValue('messId', list[0]._id)
+  }, [messes, user?.messId, setValue])
 
   const MEALS = ['Breakfast', 'Lunch', 'Dinner']
   const RATINGS = [
@@ -50,6 +64,7 @@ export default function StudentPortal() {
   }
 
   const cardStyle = { background: 'linear-gradient(135deg, rgba(26,22,48,0.9), rgba(19,16,42,0.95))', border: '1px solid rgba(139,92,246,0.15)' }
+  const studentLoginUrl = `${window.location.origin}/login/student`
 
   return (
     <div className="min-h-screen bg-app relative overflow-hidden">
@@ -60,12 +75,7 @@ export default function StudentPortal() {
 
       {/* Header */}
       <header className="relative z-10 flex items-center justify-between px-8 py-4 border-b border-border/50" style={{ background: 'rgba(19,16,42,0.8)', backdropFilter: 'blur(10px)' }}>
-        <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #8b5cf6, #7c3aed)' }}>
-            <span className="text-white">✦</span>
-          </div>
-          <span className="font-display font-bold text-xl text-primary">MessMaster</span>
-        </div>
+        <LogoLink />
         <nav className="hidden md:flex items-center gap-1 bg-surface/50 px-2 py-1.5 rounded-full border border-border/50">
           <button onClick={() => setActiveTab('feedback')} className={`px-4 py-2 text-sm rounded-full ${activeTab === 'feedback' ? 'font-bold text-white bg-card' : 'text-muted'}`}>Feedback</button>
           <button onClick={() => setActiveTab('history')} className={`px-4 py-2 text-sm rounded-full ${activeTab === 'history' ? 'font-bold text-white bg-card' : 'text-muted'}`}>History</button>
@@ -103,6 +113,7 @@ export default function StudentPortal() {
                         <p className="text-primary font-semibold">{entry.meal}</p>
                         <p className="text-xs text-muted">{new Date(entry.date || entry.createdAt).toLocaleDateString()}</p>
                       </div>
+                      <p className="text-xs text-muted mt-1">Mess: {entry.messId?.name || 'Unknown Mess'}</p>
                       <p className="text-xs text-muted mt-1">Overall: {entry.overallRating || '-'}/5</p>
                       {entry.comment ? <p className="text-sm text-muted mt-2">{entry.comment}</p> : null}
                     </div>
@@ -126,8 +137,12 @@ export default function StudentPortal() {
                 <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
                   {/* Meal selector */}
                   <div>
-                    <label className="text-xs font-semibold text-muted uppercase tracking-wider block mb-2">Date</label>
-                    <input type="date" {...register('selectedDate', { required: true })} className="input-field w-full rounded-xl px-4 py-3 text-primary text-sm mb-3" />
+                    <label className="text-xs font-semibold text-muted uppercase tracking-wider block mb-2">Mess</label>
+                    <select {...register('messId', { required: true })} className="input-field w-full rounded-xl px-4 py-3 text-primary text-sm mb-3">
+                      {(messes?.messes || []).map(m => (
+                        <option key={m._id} value={m._id}>{m.name} ({m.location})</option>
+                      ))}
+                    </select>
                     <label className="text-xs font-semibold text-muted uppercase tracking-wider block mb-2">Meal Service</label>
                     <div className="grid grid-cols-3 gap-2 p-1 rounded-xl" style={{ background: 'rgba(13,11,26,0.8)', border: '1px solid rgba(139,92,246,0.2)' }}>
                       {MEALS.map(m => (
@@ -183,23 +198,15 @@ export default function StudentPortal() {
                 </div>
               </div>
 
-              {/* QR Mock */}
               <div className="mx-auto w-44 h-44 rounded-2xl flex items-center justify-center mb-5 relative overflow-hidden"
                 style={{ background: 'white', border: '3px solid rgba(139,92,246,0.3)' }}>
-                <svg viewBox="0 0 100 100" className="w-36 h-36 text-gray-900" fill="currentColor">
-                  <rect x="10" y="10" width="25" height="25" /><rect x="65" y="10" width="25" height="25" />
-                  <rect x="10" y="65" width="25" height="25" /><rect x="45" y="45" width="10" height="10" />
-                  <rect x="60" y="60" width="15" height="15" /><rect x="40" y="20" width="10" height="10" />
-                  <rect x="20" y="45" width="15" height="15" /><rect x="70" y="40" width="10" height="10" />
-                </svg>
-                {/* Scan line */}
-                <div className="absolute w-full h-0.5 animate-bounce" style={{ background: 'rgba(139,92,246,0.8)', top: '50%', boxShadow: '0 0 10px rgba(139,92,246,0.8)' }} />
+                <QRCodeSVG value={studentLoginUrl} size={150} includeMargin />
               </div>
 
-              <p className="text-xs text-muted text-center mb-4">Scan at the counter to log meal entry</p>
-              <button className="w-full py-2.5 rounded-xl border border-border text-sm font-semibold text-muted hover:text-primary hover:border-accent/50 transition-all flex items-center justify-center gap-2">
-                ⛶ Expand Code
-              </button>
+              <p className="text-xs text-muted text-center mb-4">Scan to open Student Login directly</p>
+              <a href={studentLoginUrl} className="w-full py-2.5 rounded-xl border border-border text-sm font-semibold text-muted hover:text-primary hover:border-accent/50 transition-all flex items-center justify-center gap-2">
+                Open Student Login
+              </a>
             </div>
           </div>
 

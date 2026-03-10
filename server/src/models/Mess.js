@@ -8,6 +8,12 @@ const messSchema = new mongoose.Schema({
   location: { type: String },
   logo: { type: String, default: '' },
   adminUserId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+  adminContact: {
+    name: { type: String },
+    email: { type: String, lowercase: true, trim: true },
+    phone: { type: String },
+  },
+  // Legacy fields retained for backward compatibility with existing DB records.
   pointOfContact: {
     name: { type: String },
     phone: { type: String },

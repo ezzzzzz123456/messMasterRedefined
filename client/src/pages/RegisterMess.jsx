@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useEffect, useState } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
 import toast from 'react-hot-toast'
 import useAuthStore from '../store/useAuthStore'
 
@@ -20,21 +20,27 @@ export default function RegisterMess() {
     adminName: '',
     adminEmail: '',
     adminPassword: '',
-    pocName: '',
-    pocPhone: '',
-    repName: '',
-    repEmail: '',
-    repPhone: '',
+    adminPhoneNumber: '',
   })
   const [menuItems, setMenuItems] = useState([''])
   const [inventoryItems, setInventoryItems] = useState([emptyInventory])
   const [cooks, setCooks] = useState([emptyCook])
 
+  useEffect(() => {
+    const target = Math.max(0, Number(form.numberOfMenuItems) || 0)
+    setMenuItems(prev => {
+      if (target === 0) return []
+      if (prev.length === target) return prev
+      if (prev.length > target) return prev.slice(0, target)
+      return [...prev, ...Array.from({ length: target - prev.length }, () => '')]
+    })
+  }, [form.numberOfMenuItems])
+
   const setField = (key, value) => setForm(prev => ({ ...prev, [key]: value }))
 
   const submit = async (e) => {
     e.preventDefault()
-    if (!form.messName || !form.phoneNumber || !form.location || !form.adminName || !form.adminEmail || !form.adminPassword || !form.pocName || !form.pocPhone || !form.repName || !form.repEmail || !form.repPhone) {
+    if (!form.messName || !form.phoneNumber || !form.location || !form.adminName || !form.adminEmail || !form.adminPassword || !form.adminPhoneNumber) {
       toast.error('Please fill all required fields')
       return
     }
@@ -59,6 +65,9 @@ export default function RegisterMess() {
   return (
     <div className="min-h-screen bg-app p-6">
       <div className="max-w-5xl mx-auto rounded-3xl p-8 border border-border/50" style={{ background: 'rgba(19,16,42,0.9)' }}>
+        <div className="mb-4">
+          <Link to="/" className="text-xs text-accent-bright hover:text-accent-light">← Back to Home</Link>
+        </div>
         <h1 className="font-display text-3xl font-bold text-primary mb-2">Mess Registration</h1>
         <p className="text-muted text-sm mb-7">Set up mess profile, operations, and admin account</p>
 
@@ -80,15 +89,46 @@ export default function RegisterMess() {
             </div>
             <div className="space-y-2">
               {menuItems.map((item, idx) => (
-                <input
-                  key={idx}
-                  className="input-field rounded-xl px-4 py-3 text-sm w-full"
-                  placeholder={`Menu Item ${idx + 1}`}
-                  value={item}
-                  onChange={e => setMenuItems(prev => prev.map((m, i) => (i === idx ? e.target.value : m)))}
-                />
+                <div key={idx} className="flex items-center gap-2">
+                  <input
+                    className="input-field rounded-xl px-4 py-3 text-sm w-full"
+                    placeholder={`Menu Item ${idx + 1}`}
+                    value={item}
+                    onChange={e => setMenuItems(prev => prev.map((m, i) => (i === idx ? e.target.value : m)))}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setMenuItems(prev => prev.filter((_, i) => i !== idx))
+                      setField('numberOfMenuItems', Math.max(0, Number(form.numberOfMenuItems) - 1))
+                    }}
+                    className="text-xs px-3 py-2 rounded-lg border border-red/40 text-red whitespace-nowrap"
+                  >
+                    Delete
+                  </button>
+                </div>
               ))}
-              <button type="button" onClick={() => setMenuItems(prev => [...prev, ''])} className="text-xs text-accent-bright">+ Add Menu Item</button>
+              <div className="flex items-center gap-4">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setField('numberOfMenuItems', Number(form.numberOfMenuItems) + 1)
+                  }}
+                  className="text-xs text-accent-bright"
+                >
+                  + Add Menu Item
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMenuItems([])
+                    setField('numberOfMenuItems', 0)
+                  }}
+                  className="text-xs text-red"
+                >
+                  Delete All
+                </button>
+              </div>
             </div>
           </section>
 
@@ -125,18 +165,12 @@ export default function RegisterMess() {
           </section>
 
           <section>
-            <h2 className="text-primary font-semibold mb-3">5. Admin + Contacts</h2>
+            <h2 className="text-primary font-semibold mb-3">5. Admin Contact</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <input className="input-field rounded-xl px-4 py-3 text-sm" placeholder="Admin Name*" value={form.adminName} onChange={e => setField('adminName', e.target.value)} />
               <input className="input-field rounded-xl px-4 py-3 text-sm" type="email" placeholder="Admin Email*" value={form.adminEmail} onChange={e => setField('adminEmail', e.target.value)} />
+              <input className="input-field rounded-xl px-4 py-3 text-sm" placeholder="Admin Phone Number*" value={form.adminPhoneNumber} onChange={e => setField('adminPhoneNumber', e.target.value)} />
               <input className="input-field rounded-xl px-4 py-3 text-sm md:col-span-2" type="password" placeholder="Admin Password*" value={form.adminPassword} onChange={e => setField('adminPassword', e.target.value)} />
-
-              <input className="input-field rounded-xl px-4 py-3 text-sm" placeholder="POC Name*" value={form.pocName} onChange={e => setField('pocName', e.target.value)} />
-              <input className="input-field rounded-xl px-4 py-3 text-sm" placeholder="POC Phone*" value={form.pocPhone} onChange={e => setField('pocPhone', e.target.value)} />
-
-              <input className="input-field rounded-xl px-4 py-3 text-sm" placeholder="Representative Name*" value={form.repName} onChange={e => setField('repName', e.target.value)} />
-              <input className="input-field rounded-xl px-4 py-3 text-sm" type="email" placeholder="Representative Email*" value={form.repEmail} onChange={e => setField('repEmail', e.target.value)} />
-              <input className="input-field rounded-xl px-4 py-3 text-sm md:col-span-2" placeholder="Representative Phone*" value={form.repPhone} onChange={e => setField('repPhone', e.target.value)} />
             </div>
           </section>
 

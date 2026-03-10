@@ -3,10 +3,11 @@ import { motion } from 'framer-motion'
 import { useQuery } from '@tanstack/react-query'
 import {
   LayoutDashboard, ChefHat, Brain, ClipboardList,
-  MessageSquare, Star, Package, Settings, LogOut, Menu, Bell, HandCoins, Inbox, ShoppingBag
+  MessageSquare, Package, Settings, LogOut, Menu, Bell, HandCoins, Inbox, ShoppingBag
 } from 'lucide-react'
 import useAuthStore from '../../store/useAuthStore'
 import api from '../../api/axios'
+import LogoLink from '../ui/LogoLink'
 
 const NAV = [
   { to: 'overview', icon: LayoutDashboard, label: 'Dashboard' },
@@ -14,7 +15,6 @@ const NAV = [
   { to: 'oracle', icon: Brain, label: 'Oracle' },
   { to: 'log-waste', icon: ClipboardList, label: 'Waste Log' },
   { to: 'feedback', icon: MessageSquare, label: 'Feedback' },
-  { to: 'cook-reviews', icon: Star, label: 'Cook Reviews' },
   { to: 'inventory', icon: Package, label: 'Inventory' },
   { to: 'listings', icon: HandCoins, label: 'Food Listings' },
   { to: 'requests', icon: Inbox, label: 'Requests' },
@@ -44,15 +44,7 @@ export default function DashboardLayout() {
       >
         {/* Logo */}
         <div className="flex items-center gap-3 px-4 h-16 border-b border-border/50 shrink-0">
-          <div className="w-9 h-9 rounded-xl shrink-0 flex items-center justify-center"
-            style={{ background: 'linear-gradient(135deg, #8b5cf6, #7c3aed)' }}>
-            <span className="text-white text-lg">✦</span>
-          </div>
-          {sidebarOpen && (
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.1 }}>
-              <span className="font-display font-bold text-primary text-lg">MessMaster</span>
-            </motion.div>
-          )}
+          <LogoLink className="min-w-0 flex-1" showText={sidebarOpen} />
           <button onClick={toggleSidebar}
             className="ml-auto text-muted hover:text-primary p-1 transition-colors shrink-0">
             <Menu size={18} />

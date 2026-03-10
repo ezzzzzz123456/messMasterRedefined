@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
@@ -5,8 +6,14 @@ import api from '../../api/axios'
 
 export default function FoodListings() {
   const qc = useQueryClient()
-  const { register, handleSubmit, reset } = useForm({
+  const { register, handleSubmit, reset, watch, setValue } = useForm({
     defaultValues: { foodCategory: '', foodItem: '', quantityAvailableKg: '', ratePerKg: '', notes: '' },
+  })
+  const selectedFoodItem = watch('foodItem')
+
+  const { data: menuData } = useQuery({
+    queryKey: ['menu-items-approved-for-listing'],
+    queryFn: () => api.get('/menu-items').then(r => r.data),
   })
 
   const { data } = useQuery({
@@ -29,6 +36,11 @@ export default function FoodListings() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ['food-listings-mine'] }),
   })
 
+  useEffect(() => {
+    const selected = (menuData?.items || []).find(i => i.name === selectedFoodItem)
+    setValue('foodCategory', selected?.category || '')
+  }, [selectedFoodItem, menuData?.items, setValue])
+
   return (
     <div className="space-y-6">
       <div>
@@ -38,9 +50,25 @@ export default function FoodListings() {
 
       <div className="rounded-2xl p-6 border border-border/50" style={{ background: 'rgba(19,16,42,0.9)' }}>
         <h2 className="text-primary font-semibold mb-4">Create Listing</h2>
-        <form className="grid grid-cols-1 md:grid-cols-2 gap-4" onSubmit={handleSubmit((payload) => createMutation.mutate(payload))}>
-          <input {...register('foodCategory', { required: true })} className="input-field rounded-xl px-4 py-3 text-sm" placeholder="Food category" />
-          <input {...register('foodItem', { required: true })} className="input-field rounded-xl px-4 py-3 text-sm" placeholder="Food item" />
+        <form
+          className="grid grid-cols-1 md:grid-cols-2 gap-4"
+          onSubmit={handleSubmit((payload) => {
+            const selected = (menuData?.items || []).find(i => i.name === payload.foodItem)
+            createMutation.mutate({
+              ...payload,
+              foodCategory: selected?.category || payload.foodCategory,
+            })
+          })}
+        >
+          <select {...register('foodItem', { required: true })} className="input-field rounded-xl px-4 py-3 text-sm">
+            <option value="">Select approved food item...</option>
+            {(menuData?.items || []).map(item => (
+              <option key={item._id} value={item.name}>
+                {item.name} ({item.category})
+              </option>
+            ))}
+          </select>
+          <input {...register('foodCategory')} readOnly className="input-field rounded-xl px-4 py-3 text-sm opacity-70" placeholder="Auto-filled from approved item" />
           <input {...register('quantityAvailableKg', { required: true })} type="number" step="0.1" className="input-field rounded-xl px-4 py-3 text-sm" placeholder="Quantity (kg)" />
           <input {...register('ratePerKg', { required: true })} type="number" step="0.1" className="input-field rounded-xl px-4 py-3 text-sm" placeholder="Rate per kg" />
           <textarea {...register('notes')} className="input-field rounded-xl px-4 py-3 text-sm md:col-span-2" rows={2} placeholder="Notes (optional)" />

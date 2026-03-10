@@ -2,8 +2,8 @@ const express = require('express');
 const router = express.Router();
 const { verifyToken, requireRole } = require('../middleware/auth.middleware');
 const FoodListing = require('../models/FoodListing');
-const Mess = require('../models/Mess');
 const Feedback = require('../models/Feedback');
+const MenuItem = require('../models/MenuItem');
 
 router.post('/', verifyToken, requireRole('staff'), async (req, res, next) => {
   try {
@@ -13,11 +13,20 @@ router.post('/', verifyToken, requireRole('staff'), async (req, res, next) => {
     }
     if (!req.user.messId) return res.status(400).json({ error: 'User is not linked to any mess' });
 
+    const approvedItem = await MenuItem.findOne({
+      messId: req.user.messId,
+      isActive: true,
+      name: new RegExp(`^${String(foodItem).trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i'),
+    });
+    if (!approvedItem) {
+      return res.status(400).json({ error: 'Only approved menu items can be listed' });
+    }
+
     const listing = await FoodListing.create({
       messId: req.user.messId,
       createdBy: req.user._id,
-      foodCategory,
-      foodItem,
+      foodCategory: approvedItem.category || foodCategory,
+      foodItem: approvedItem.name,
       quantityAvailableKg: Number(quantityAvailableKg),
       ratePerKg: Number(ratePerKg),
       notes: notes || '',
@@ -66,7 +75,7 @@ router.get('/public/all', verifyToken, requireRole('ngo'), async (req, res, next
 
 router.get('/public/:id', verifyToken, requireRole('ngo'), async (req, res, next) => {
   try {
-    const listing = await FoodListing.findById(req.params.id).populate('messId', 'name location phone representative');
+    const listing = await FoodListing.findById(req.params.id).populate('messId', 'name location phone adminContact representative pointOfContact');
     if (!listing || !listing.isActive) return res.status(404).json({ error: 'Listing not found' });
 
     const [reviewSummary] = await Feedback.aggregate([

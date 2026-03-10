@@ -3,6 +3,8 @@ import { useEffect } from 'react'
 import useAuthStore from '../store/useAuthStore'
 
 import Landing from '../pages/Landing'
+import Review from '../pages/Review'
+import AboutUs from '../pages/AboutUs'
 import LoginSelect from '../pages/LoginSelect'
 import StaffLogin from '../pages/StaffLogin'
 import StudentLogin from '../pages/StudentLogin'
@@ -17,7 +19,6 @@ import MenuAnalysis from '../pages/dashboard/MenuAnalysis'
 import Oracle from '../pages/dashboard/Oracle'
 import LogWaste from '../pages/dashboard/LogWaste'
 import FeedbackPage from '../pages/dashboard/FeedbackPage'
-import CookReviews from '../pages/dashboard/CookReviews'
 import InventoryPage from '../pages/dashboard/InventoryPage'
 import SetupPage from '../pages/dashboard/SetupPage'
 import FoodListings from '../pages/dashboard/FoodListings'
@@ -58,6 +59,9 @@ export default function AppRouter() {
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<Landing />} />
+        <Route path="/review" element={<Review />} />
+        <Route path="/about-us" element={<AboutUs />} />
+        <Route path="/student-portal" element={<Navigate to="/login/student" replace />} />
         <Route path="/login" element={<LoginSelect />} />
         <Route path="/login/mess" element={<StaffLogin />} />
         <Route path="/login/staff" element={<StaffLogin />} />
@@ -82,7 +86,6 @@ export default function AppRouter() {
           <Route path="oracle" element={<Oracle />} />
           <Route path="log-waste" element={<LogWaste />} />
           <Route path="feedback" element={<FeedbackPage />} />
-          <Route path="cook-reviews" element={<CookReviews />} />
           <Route path="inventory" element={<InventoryPage />} />
           <Route path="listings" element={<FoodListings />} />
           <Route path="requests" element={<RequestsPage />} />

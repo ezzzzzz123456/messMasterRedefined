@@ -49,6 +49,38 @@
 - Added backend endpoint for student history.
 - Student UI History tab now fetches and displays prior records.
 
+## Additional Fixes (Latest Batch)
+
+### Student Portal
+1. QR code entry point fixed
+- Student portal now renders a real QR code (not a static mock).
+- QR points to Student Login route (`/login/student`) as direct entry.
+
+2. Rate Your Experience mess selection fixed
+- Added mess dropdown in student feedback form.
+- Submission now sends selected `messId`, and backend validates/links feedback to that mess.
+
+### Mess Portal
+1. Menu Analysis risk labels corrected
+- Classification now follows graph value thresholds:
+  - `Critical` if value > 70
+  - `High Risk` if value > 40 and <= 70
+  - `Normal` if value <= 40
+- Graph bar coloring and summary counts now use same threshold logic.
+
+### Global UI / Auth
+1. Logo click navigation fixed
+- Added reusable logo component with role-aware routing:
+  - staff -> `/dashboard/overview`
+  - student -> `/student/feedback`
+  - ngo -> `/ngo/dashboard`
+  - unauthenticated -> `/`
+- Wired logo behavior in major pages/layout headers.
+
+2. Session timeout increased
+- Access token expiry default now targets one hour.
+- If old value `15m` is configured, code upgrades it to `1h` automatically.
+
 ## Backend Additions
 - `GET /api/v1/inventory/reorder-suggestions`
 - `POST /api/v1/inventory/authorize-reorder`

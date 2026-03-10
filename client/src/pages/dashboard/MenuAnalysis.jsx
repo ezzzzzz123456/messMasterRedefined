@@ -17,7 +17,17 @@ export default function MenuAnalysis() {
     risk: item.riskScore,
   })).sort((a, b) => b.avgWaste - a.avgWaste).slice(0, 10)
 
-  const getColor = (risk) => risk > 70 ? '#ef4444' : risk > 40 ? '#f59e0b' : '#8b5cf6'
+  const getClassByWaste = (avgWaste) => {
+    if (avgWaste > 70) return 'critical'
+    if (avgWaste > 40) return 'high'
+    return 'normal'
+  }
+  const getColor = (avgWaste) => {
+    const cls = getClassByWaste(avgWaste)
+    if (cls === 'critical') return '#ef4444'
+    if (cls === 'high') return '#f59e0b'
+    return '#8b5cf6'
+  }
 
   const CustomTooltip = ({ active, payload, label }) => {
     if (!active || !payload?.length) return null
@@ -44,7 +54,7 @@ export default function MenuAnalysis() {
             <YAxis type="category" dataKey="name" stroke="#6b6490" tick={{ fontSize: 11, fill: '#6b6490' }} tickLine={false} axisLine={false} width={110} />
             <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(139,92,246,0.05)' }} />
             <Bar dataKey="avgWaste" radius={[0, 6, 6, 0]}>
-              {chartData.map((entry, i) => <Cell key={i} fill={getColor(entry.risk)} fillOpacity={0.8} />)}
+              {chartData.map((entry, i) => <Cell key={i} fill={getColor(entry.avgWaste)} fillOpacity={0.8} />)}
             </Bar>
           </BarChart>
         </ResponsiveContainer>
@@ -52,9 +62,9 @@ export default function MenuAnalysis() {
 
       <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
         {[
-          { label: 'Critical Risk (>70)', count: chartData.filter(d => d.risk > 70).length, color: 'red' },
-          { label: 'High Risk (40-70)', count: chartData.filter(d => d.risk > 40 && d.risk <= 70).length, color: 'yellow' },
-          { label: 'Normal (<40)', count: chartData.filter(d => d.risk <= 40).length, color: 'accent' },
+          { label: 'Critical Risk (>70)', count: chartData.filter(d => getClassByWaste(d.avgWaste) === 'critical').length, color: 'red' },
+          { label: 'High Risk (40-70)', count: chartData.filter(d => getClassByWaste(d.avgWaste) === 'high').length, color: 'yellow' },
+          { label: 'Normal (<=40)', count: chartData.filter(d => getClassByWaste(d.avgWaste) === 'normal').length, color: 'accent' },
         ].map(s => (
           <div key={s.label} className="rounded-2xl p-5 text-center" style={cardStyle}>
             <p className="text-3xl font-display font-bold mb-1" style={{ color: s.color === 'red' ? '#ef4444' : s.color === 'yellow' ? '#f59e0b' : '#a78bfa' }}>{s.count}</p>

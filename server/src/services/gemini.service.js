@@ -61,35 +61,6 @@ No markdown, no explanation, just the JSON array.`;
   }
 };
 
-const generateCookReview = async (cookData) => {
-  const fallbackReviews = {
-    'A+': `${cookData.name} delivered exceptional performance today, maintaining waste below 10% across all dishes. Student ratings were outstanding, reflecting excellent cooking quality and portion management.`,
-    'A': `${cookData.name} had a strong service today with good waste control and positive student feedback. Minor adjustments in portion sizing could further optimize performance.`,
-    'B+': `${cookData.name} performed above average today. Waste ratios were acceptable but there is room to improve on ${cookData.dishes?.[0]?.menuItemName || 'key dishes'}.`,
-    'B': `${cookData.name} maintained standard performance today. Focus on reducing preparation waste and gathering more student feedback to improve the composite score.`,
-    'C': `${cookData.name} struggled today with higher than average waste ratios. A review of preparation quantities and cooking techniques is recommended to improve future performance.`,
-  };
-
-  try {
-    const genAI = getGeminiClient();
-    if (!genAI) return fallbackReviews[cookData.grade] || fallbackReviews['B'];
-
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
-    const prompt = `You are a kitchen performance reviewer.
-Cook: ${cookData.name}, Role: ${cookData.role}.
-Today's data: ${JSON.stringify(cookData.dishes)}.
-Composite score: ${cookData.compositeScore}/10. Grade: ${cookData.grade}.
-Write exactly 2-3 sentences as a performance review.
-Be specific, constructive, and reference actual numbers.
-Return ONLY the review text, no labels.`;
-
-    const result = await model.generateContent(prompt);
-    return result.response.text().trim();
-  } catch {
-    return fallbackReviews[cookData.grade] || fallbackReviews['B'];
-  }
-};
-
 const generateInventorySuggestions = async (messId, lowStockItems) => {
   const key = `inventory:${messId}:${new Date().toDateString()}`;
   const cached = await getCached(key);
@@ -120,4 +91,4 @@ Return JSON: [{ "item": "name", "urgency": "critical|high|normal", "suggestion":
   }
 };
 
-module.exports = { generateInsights, generateCookReview, generateInventorySuggestions };
+module.exports = { generateInsights, generateInventorySuggestions };

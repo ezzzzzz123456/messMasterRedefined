@@ -5,6 +5,7 @@ import { useForm } from 'react-hook-form'
 import toast from 'react-hot-toast'
 import { Eye, EyeOff } from 'lucide-react'
 import useAuthStore from '../store/useAuthStore'
+import LogoLink from '../components/ui/LogoLink'
 
 export default function StaffLogin() {
   const { login } = useAuthStore()
@@ -36,15 +37,15 @@ export default function StaffLogin() {
 
       {/* Nav */}
       <nav className="relative z-10 flex items-center justify-between px-8 py-5 border-b border-border/50">
-        <Link to="/" className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #8b5cf6, #7c3aed)' }}>
-            <span className="text-white text-lg">✦</span>
-          </div>
-          <span className="font-display font-bold text-xl text-primary">MessMaster</span>
-        </Link>
-        <Link to="/login/student" className="text-sm text-muted hover:text-primary transition-colors">
-          Student Portal →
-        </Link>
+        <LogoLink />
+        <div className="flex items-center gap-4">
+          <Link to="/register/mess" className="text-sm font-medium text-accent-bright hover:text-accent-light transition-colors">
+            Mess Register →
+          </Link>
+          <Link to="/login/student" className="text-sm text-muted hover:text-primary transition-colors">
+            Student Portal →
+          </Link>
+        </div>
       </nav>
 
       <div className="relative z-10 flex flex-col lg:flex-row items-center justify-center flex-1 px-8 py-12 max-w-6xl mx-auto w-full gap-16">
@@ -67,7 +68,7 @@ export default function StaffLogin() {
             Access analytics, waste tracking, AI predictions, inventory management and more.
           </p>
           <div className="grid grid-cols-2 gap-3">
-            {['AI Oracle Predictions', 'Waste Analytics', 'Inventory Alerts', 'Cook Reviews'].map(f => (
+            {['AI Oracle Predictions', 'Waste Analytics', 'Inventory Alerts', 'NGO Requests'].map(f => (
               <div key={f} className="glass rounded-xl p-4 text-sm text-muted flex items-center gap-2">
                 <span className="text-accent-bright">✦</span> {f}
               </div>
@@ -113,11 +114,20 @@ export default function StaffLogin() {
                 {errors.password && <p className="text-red text-xs mt-1">{errors.password.message}</p>}
               </div>
 
-              <button type="submit" disabled={loading}
+            <button type="submit" disabled={loading}
                 className="btn-accent w-full text-white font-semibold py-4 rounded-xl text-sm mt-2">
                 {loading ? 'Signing in...' : 'Sign In →'}
               </button>
             </form>
+
+            <div className="mt-4 text-center">
+              <p className="text-xs text-muted">
+                No mess account yet?{' '}
+                <Link to="/register/mess" className="text-accent-bright hover:text-accent-light font-semibold">
+                  Register Mess
+                </Link>
+              </p>
+            </div>
 
             {/* Demo accounts */}
             <div className="mt-6 p-4 rounded-2xl border border-border/50" style={{ background: 'rgba(13,11,26,0.6)' }}>

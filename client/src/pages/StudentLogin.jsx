@@ -5,6 +5,7 @@ import { useForm } from 'react-hook-form'
 import toast from 'react-hot-toast'
 import { Eye, EyeOff } from 'lucide-react'
 import useAuthStore from '../store/useAuthStore'
+import LogoLink from '../components/ui/LogoLink'
 
 export default function StudentLogin() {
   const { login, register: registerUser } = useAuthStore()
@@ -46,12 +47,7 @@ export default function StudentLogin() {
       </div>
 
       <nav className="relative z-10 flex items-center justify-between px-8 py-5 border-b border-border/50">
-        <Link to="/" className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #8b5cf6, #7c3aed)' }}>
-            <span className="text-white text-lg">✦</span>
-          </div>
-          <span className="font-display font-bold text-xl text-primary">MessMaster</span>
-        </Link>
+        <LogoLink />
         <Link to="/login/staff" className="text-sm text-muted hover:text-primary transition-colors">
           Staff Portal →
         </Link>

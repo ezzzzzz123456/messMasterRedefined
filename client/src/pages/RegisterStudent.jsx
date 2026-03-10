@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import toast from 'react-hot-toast'
 import api from '../api/axios'
@@ -41,6 +41,9 @@ export default function RegisterStudent() {
   return (
     <div className="min-h-screen bg-app flex items-center justify-center p-6">
       <div className="w-full max-w-2xl rounded-3xl p-8 border border-border/50" style={{ background: 'rgba(19,16,42,0.9)' }}>
+        <div className="mb-4">
+          <Link to="/" className="text-xs text-accent-bright hover:text-accent-light">← Back to Home</Link>
+        </div>
         <h1 className="font-display text-3xl font-bold text-primary mb-2">Student Registration</h1>
         <p className="text-muted text-sm mb-7">Create your account and connect to a mess</p>
 

@@ -6,9 +6,15 @@ const MenuItem = require('../models/MenuItem');
 const Inventory = require('../models/Inventory');
 const Staff = require('../models/Staff');
 
+const resolveAccessExpiry = () => {
+  const configured = String(process.env.JWT_EXPIRES_IN || '').trim();
+  if (!configured || configured === '15m') return '1h';
+  return configured;
+};
+
 const generateTokens = (userId) => {
   const accessToken = jwt.sign({ userId }, process.env.JWT_SECRET, {
-    expiresIn: process.env.JWT_EXPIRES_IN || '15m',
+    expiresIn: resolveAccessExpiry(),
   });
   const refreshToken = jwt.sign({ userId }, process.env.JWT_REFRESH_SECRET, {
     expiresIn: process.env.JWT_REFRESH_EXPIRES_IN || '7d',
@@ -127,17 +133,18 @@ exports.registerMess = async (req, res, next) => {
       numberOfMenuItems, menuItems = [],
       inventoryItems = [],
       cooks = [],
-      adminName, adminEmail, adminPassword,
-      pocName, pocPhone,
-      repName, repEmail, repPhone,
+      adminName, adminEmail, adminPassword, adminPhoneNumber,
+      pocName, pocPhone, // legacy fallback
+      repName, repEmail, repPhone, // legacy fallback
     } = req.body;
 
-    if (!messName || !phoneNumber || !location || !adminName || !adminEmail || !adminPassword || !pocName || !pocPhone || !repName || !repEmail || !repPhone) {
+    const resolvedAdminPhone = adminPhoneNumber || pocPhone || repPhone || phoneNumber;
+
+    if (!messName || !phoneNumber || !location || !adminName || !adminEmail || !adminPassword || !resolvedAdminPhone) {
       return res.status(400).json({ error: 'Missing required mess registration fields' });
     }
 
     const normalizedAdminEmail = String(adminEmail).trim().toLowerCase();
-    const normalizedRepEmail = String(repEmail).trim().toLowerCase();
     const existing = await User.findOne({ email: normalizedAdminEmail });
     if (existing) return res.status(400).json({ error: 'Admin email already registered' });
 
@@ -163,8 +170,14 @@ exports.registerMess = async (req, res, next) => {
       location,
       capacity: messCapacity ? Number(messCapacity) : undefined,
       adminUserId: adminUser._id,
-      pointOfContact: { name: pocName, phone: pocPhone },
-      representative: { name: repName, email: normalizedRepEmail, phone: repPhone },
+      adminContact: {
+        name: adminName,
+        email: normalizedAdminEmail,
+        phone: String(resolvedAdminPhone || '').trim(),
+      },
+      // Legacy fields mirrored for compatibility with existing data consumers.
+      pointOfContact: { name: adminName, phone: String(resolvedAdminPhone || '').trim() },
+      representative: { name: adminName, email: normalizedAdminEmail, phone: String(resolvedAdminPhone || '').trim() },
       isActive: true,
     });
 

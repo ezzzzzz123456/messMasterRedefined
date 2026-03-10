@@ -4,13 +4,14 @@ const User = require('../models/User');
 
 exports.create = async (req, res, next) => {
   try {
-    const { name, capacity, established, phone, location, pointOfContact, representative } = req.body;
+    const { name, capacity, established, phone, location, adminContact, pointOfContact, representative } = req.body;
     const mess = await Mess.create({
       name,
       capacity,
       established,
       phone,
       location,
+      adminContact: adminContact || representative || pointOfContact,
       pointOfContact,
       representative,
       adminUserId: req.user._id,

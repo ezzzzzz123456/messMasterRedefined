@@ -10,7 +10,6 @@ const WasteLog = require('../src/models/WasteLog');
 const Feedback = require('../src/models/Feedback');
 const Inventory = require('../src/models/Inventory');
 const EnergyLog = require('../src/models/EnergyLog');
-const CookReview = require('../src/models/CookReview');
 
 const staffUsers = [
   { name: 'Ravi Kumar', email: 'ravi@mess.edu', password: 'staff123', role: 'staff' },
@@ -55,6 +54,7 @@ async function seed() {
       phone: '9876543210',
       location: 'Hostel H4, IIT Campus, Chennai - 600036',
       adminUserId: adminUser._id,
+      adminContact: { name: 'Ravi Kumar', email: 'ravi@mess.edu', phone: '9876543210' },
       pointOfContact: { name: 'Mess Office', phone: '9876500000' },
       representative: { name: 'Ravi Kumar', email: 'ravi@mess.edu', phone: '9876543210' },
       isActive: true,
@@ -89,7 +89,6 @@ async function seed() {
     Feedback.deleteMany({ messId: mess._id }),
     Inventory.deleteMany({ messId: mess._id }),
     EnergyLog.deleteMany({ messId: mess._id }),
-    CookReview.deleteMany({ messId: mess._id }),
   ]);
   console.log('Cleared old mess-linked sample data');
 

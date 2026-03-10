@@ -4,6 +4,9 @@ export default function RegisterSelect() {
   return (
     <div className="min-h-screen bg-app flex items-center justify-center p-6">
       <div className="w-full max-w-2xl rounded-3xl p-8 border border-border/50" style={{ background: 'rgba(19,16,42,0.9)' }}>
+        <div className="mb-4">
+          <Link to="/" className="text-xs text-accent-bright hover:text-accent-light">← Back to Home</Link>
+        </div>
         <h1 className="font-display text-3xl font-bold text-primary mb-2">Register</h1>
         <p className="text-muted text-sm mb-8">Select registration type</p>
 

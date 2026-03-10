@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { verifyToken, requireRole } = require('../middleware/auth.middleware');
 const WasteLog = require('../models/WasteLog');
+const MenuItem = require('../models/MenuItem');
 
 router.use(verifyToken, requireRole('staff'));
 
@@ -27,7 +28,30 @@ router.get('/', async (req, res, next) => {
 
 router.post('/', async (req, res, next) => {
   try {
-    const log = new WasteLog({ ...req.body, messId: req.user.messId, loggedBy: req.user._id });
+    const { menuItemId, meal, wastedKg, preparedKg } = req.body;
+    if (!menuItemId || !meal || !wastedKg || !preparedKg) {
+      return res.status(400).json({ error: 'menuItemId, meal, wastedKg, preparedKg are required' });
+    }
+
+    const approvedItem = await MenuItem.findOne({
+      _id: menuItemId,
+      messId: req.user.messId,
+      isActive: true,
+    });
+    if (!approvedItem) {
+      return res.status(400).json({ error: 'Invalid or unapproved menu item selected' });
+    }
+
+    const log = new WasteLog({
+      messId: req.user.messId,
+      loggedBy: req.user._id,
+      meal,
+      menuItemId: approvedItem._id,
+      menuItemName: approvedItem.name,
+      wastedKg: Number(wastedKg),
+      preparedKg: Number(preparedKg),
+      date: new Date(),
+    });
     await log.save();
     res.status(201).json(log);
   } catch (err) { next(err); }

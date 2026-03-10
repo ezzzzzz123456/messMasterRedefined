@@ -8,8 +8,8 @@ const User = require('../models/User');
 // POST - student submits feedback
 router.post('/', verifyToken, async (req, res, next) => {
   try {
-    const { meal, overall, taste, portion, freshness, comment, selectedDate } = req.body;
-    let messId = req.user.messId;
+    const { meal, overall, taste, portion, freshness, comment, messId: selectedMessId } = req.body;
+    let messId = selectedMessId || req.user.messId;
 
     // Handle newly registered students with no mess assignment yet.
     if (!messId) {
@@ -18,6 +18,12 @@ router.post('/', verifyToken, async (req, res, next) => {
         return res.status(400).json({ error: 'No active mess found for feedback submission' });
       }
       messId = activeMess._id;
+    }
+
+    const mess = await Mess.findById(messId);
+    if (!mess) return res.status(404).json({ error: 'Selected mess not found' });
+
+    if (String(req.user.messId || '') !== String(messId)) {
       await User.findByIdAndUpdate(req.user._id, { messId });
       req.user.messId = messId;
     }
@@ -25,7 +31,7 @@ router.post('/', verifyToken, async (req, res, next) => {
     const feedback = await Feedback.create({
       messId,
       studentId: req.user._id,
-      date: selectedDate ? new Date(selectedDate) : new Date(),
+      date: new Date(),
       meal,
       overallRating: overall || 3,
       tasteRating: taste || 3,
@@ -43,7 +49,8 @@ router.get('/my-history', verifyToken, requireRole('student'), async (req, res, 
     const feedback = await Feedback.find({ studentId: req.user._id })
       .sort({ date: -1, createdAt: -1 })
       .limit(100)
-      .select('date meal overallRating tasteRating portionRating freshnessRating comment createdAt');
+      .select('date meal overallRating tasteRating portionRating freshnessRating comment createdAt messId')
+      .populate('messId', 'name');
 
     res.json({ history: feedback });
   } catch (err) { next(err); }
