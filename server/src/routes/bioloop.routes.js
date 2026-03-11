@@ -4,7 +4,12 @@ const { verifyToken, requireRole } = require('../middleware/auth.middleware');
 const BioWasteListing = require('../models/BioWasteListing');
 const Feedback = require('../models/Feedback');
 const Mess = require('../models/Mess');
-const { FOUR_HOURS_MS, resolveScheduledAt } = require('../services/bioloop.service');
+const {
+  FOUR_HOURS_MS,
+  resolveScheduledAt,
+  getAutoTrackedExpiredKg,
+  markExpiredNgoListingsConsumed,
+} = require('../services/bioloop.service');
 
 const BIO_RADIUS_METERS = 50000;
 
@@ -143,6 +148,18 @@ router.get('/settings', requireRole('staff'), async (req, res, next) => {
   }
 });
 
+router.get('/tracker', requireRole('staff'), async (req, res, next) => {
+  try {
+    const autoTrackedExpiredKg = await getAutoTrackedExpiredKg(req.user.messId);
+    res.json({
+      autoTrackedExpiredKg,
+      simulationWindowMinutes: 0.5,
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
 router.patch('/settings', requireRole('staff'), async (req, res, next) => {
   try {
     const dailyLogTime = String(req.body.dailyLogTime || '').trim();
@@ -164,9 +181,16 @@ router.patch('/settings', requireRole('staff'), async (req, res, next) => {
 
 router.post('/', requireRole('staff'), async (req, res, next) => {
   try {
-    const { wasteType, itemName, quantityAvailableKg, ratePerKg, notes, scheduledAt } = req.body;
-    if (!wasteType || !itemName || !quantityAvailableKg || ratePerKg === undefined) {
-      return res.status(400).json({ error: 'wasteType, itemName, quantityAvailableKg, ratePerKg are required' });
+    const { manualDumpedKg, ratePerKg, notes } = req.body;
+    if (manualDumpedKg === undefined || ratePerKg === undefined) {
+      return res.status(400).json({ error: 'manualDumpedKg and ratePerKg are required' });
+    }
+    const parsedRatePerKg = Number(ratePerKg);
+    if (!Number.isFinite(parsedRatePerKg) || parsedRatePerKg <= 0) {
+      return res.status(400).json({ error: 'ratePerKg must be greater than zero' });
+    }
+    if (Number(manualDumpedKg) < 0) {
+      return res.status(400).json({ error: 'manualDumpedKg cannot be negative' });
     }
 
     const mess = await Mess.findById(req.user.messId).select('bioLoopSettings');
@@ -174,18 +198,26 @@ router.post('/', requireRole('staff'), async (req, res, next) => {
 
     const now = new Date();
     const resolvedScheduledAt = resolveScheduledAt({
-      overrideScheduledAt: scheduledAt,
       dailyLogTime: mess.bioLoopSettings?.dailyLogTime || '21:00',
       now,
     });
+    const autoTrackedExpiredKg = await getAutoTrackedExpiredKg(req.user.messId);
+    const manualQty = Number(manualDumpedKg);
+    const totalQty = Number((autoTrackedExpiredKg + manualQty).toFixed(2));
+
+    if (totalQty <= 0) {
+      return res.status(400).json({ error: 'There is no biodegradable waste available to list yet' });
+    }
 
     const listing = await BioWasteListing.create({
       messId: req.user.messId,
       createdBy: req.user._id,
-      wasteType,
-      itemName: String(itemName).trim(),
-      quantityAvailableKg: Number(quantityAvailableKg),
-      ratePerKg: Number(ratePerKg),
+      wasteType: 'biodegradable_waste',
+      itemName: 'Biodegradable Waste',
+      autoTrackedExpiredKg,
+      manualDumpedKg: manualQty,
+      quantityAvailableKg: totalQty,
+      ratePerKg: parsedRatePerKg,
       notes: notes || '',
       scheduledAt: resolvedScheduledAt,
       status: resolvedScheduledAt <= now ? 'active' : 'scheduled',
@@ -194,6 +226,8 @@ router.post('/', requireRole('staff'), async (req, res, next) => {
       finalizedAt: undefined,
       isMarketplaceVisible: resolvedScheduledAt <= now,
     });
+
+    await markExpiredNgoListingsConsumed(req.user.messId, now);
 
     res.status(201).json(listing);
   } catch (err) {

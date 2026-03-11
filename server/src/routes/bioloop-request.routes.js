@@ -7,15 +7,22 @@ const BioWasteListing = require('../models/BioWasteListing');
 router.post('/', verifyToken, requireRole('bio'), async (req, res, next) => {
   try {
     const { listingId, requestedQtyKg, offeredRatePerKg } = req.body;
-    if (!listingId || !requestedQtyKg || offeredRatePerKg === undefined) {
-      return res.status(400).json({ error: 'listingId, requestedQtyKg, offeredRatePerKg are required' });
+    if (!listingId || offeredRatePerKg === undefined) {
+      return res.status(400).json({ error: 'listingId and offeredRatePerKg are required' });
     }
 
     const listing = await BioWasteListing.findById(listingId);
     if (!listing || !listing.isMarketplaceVisible || listing.status !== 'active') {
       return res.status(404).json({ error: 'BioLoop listing not found' });
     }
-    if (Number(requestedQtyKg) > listing.quantityAvailableKg) {
+    const resolvedRequestedQtyKg = requestedQtyKg === undefined || requestedQtyKg === null || requestedQtyKg === ''
+      ? Number(listing.quantityAvailableKg)
+      : Number(requestedQtyKg);
+
+    if (!Number.isFinite(resolvedRequestedQtyKg) || resolvedRequestedQtyKg <= 0) {
+      return res.status(400).json({ error: 'requestedQtyKg must be greater than zero' });
+    }
+    if (resolvedRequestedQtyKg > listing.quantityAvailableKg) {
       return res.status(400).json({ error: 'Requested quantity exceeds available quantity' });
     }
 
@@ -23,7 +30,7 @@ router.post('/', verifyToken, requireRole('bio'), async (req, res, next) => {
       listingId: listing._id,
       messId: listing.messId,
       bioId: req.user._id,
-      requestedQtyKg: Number(requestedQtyKg),
+      requestedQtyKg: resolvedRequestedQtyKg,
       offeredRatePerKg: Number(offeredRatePerKg),
       status: 'pending',
       isReadByMess: false,

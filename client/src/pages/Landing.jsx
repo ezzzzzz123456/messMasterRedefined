@@ -4,7 +4,7 @@ import BioLoopLogo from '../components/ui/BioLoopLogo'
 
 const NAV_ITEMS = [
   { label: 'Student Portal', to: '/login/student' },
-  { label: 'BioLoop', to: '/bioloop', icon: true },
+  { label: 'BioLoop', to: '/login/bio', icon: true },
   { label: 'About Us', to: '/about-us' },
 ]
 

@@ -59,10 +59,14 @@ export default function BioLoop() {
             {isLoading && <p className="text-muted text-sm">Loading listings...</p>}
             <div className="space-y-3">
               {(data?.listings || []).map((listing) => (
-                <div key={listing._id} className="p-4 rounded-xl border border-border/40">
-                  <p className="text-primary font-semibold">{listing.itemName}</p>
-                  <p className="text-sm text-muted">{listing.messId?.name} · {listing.quantityAvailableKg} kg · ₹{listing.ratePerKg}/kg</p>
-                  <p className="text-xs text-accent-bright mt-2 uppercase">{String(listing.wasteType || '').replaceAll('_', ' ')}</p>
+                <div key={listing._id} className="p-4 rounded-xl border border-border/40 flex items-center justify-between gap-4">
+                  <div>
+                    <p className="text-primary font-semibold">{listing.messId?.name} · {String(listing.wasteType || '').replaceAll('_', ' ')}</p>
+                    <p className="text-sm text-muted">{listing.messId?.location} · {listing.quantityAvailableKg} kg · ₹{listing.ratePerKg}/kg</p>
+                  </div>
+                  <Link to="/login/bio" className="text-xs px-3 py-1.5 rounded-lg bg-accent text-white whitespace-nowrap">
+                    Login to View
+                  </Link>
                 </div>
               ))}
               {!data?.listings?.length && !isLoading && <p className="text-muted text-sm">No BioLoop listings yet.</p>}

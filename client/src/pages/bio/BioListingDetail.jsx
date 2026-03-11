@@ -8,7 +8,7 @@ export default function BioListingDetail() {
   const { listingId } = useParams()
   const navigate = useNavigate()
   const qc = useQueryClient()
-  const { register, handleSubmit } = useForm({ defaultValues: { requestedQtyKg: '', offeredRatePerKg: '' } })
+  const { register, handleSubmit } = useForm({ defaultValues: { offeredRatePerKg: '' } })
 
   const { data, isLoading } = useQuery({
     queryKey: ['bio-listing-detail', listingId],
@@ -40,16 +40,12 @@ export default function BioListingDetail() {
                 {String(data.listing?.wasteType || '').replaceAll('_', ' ')} · Available: {data.listing?.quantityAvailableKg} kg · Asking: ₹{data.listing?.ratePerKg}/kg
               </p>
               <p className="text-sm text-muted mb-6">Mess reviews: {Number(data.messReview?.avgOverall || 0).toFixed(1)} / 5 ({data.messReview?.count || 0} ratings)</p>
+              <p className="text-sm text-muted mb-6">This request will cover the full available quantity: {data.listing?.quantityAvailableKg} kg.</p>
 
               <form onSubmit={handleSubmit((values) => requestMutation.mutate({
                 listingId,
-                requestedQtyKg: Number(values.requestedQtyKg),
                 offeredRatePerKg: Number(values.offeredRatePerKg),
-              }))} className="grid grid-cols-1 md:grid-cols-[1fr,1fr,auto] gap-3 items-end">
-                <div>
-                  <label className="text-xs text-muted uppercase tracking-wider block mb-2">Desired Quantity (kg)</label>
-                  <input {...register('requestedQtyKg', { required: true, min: 0.1 })} type="number" step="0.1" className="input-field rounded-xl px-4 py-3 text-sm w-full" />
-                </div>
+              }))} className="grid grid-cols-1 md:grid-cols-[1fr,auto] gap-3 items-end">
                 <div>
                   <label className="text-xs text-muted uppercase tracking-wider block mb-2">Offer Rate (₹/kg)</label>
                   <input {...register('offeredRatePerKg', { required: true, min: 0 })} type="number" step="0.1" className="input-field rounded-xl px-4 py-3 text-sm w-full" />

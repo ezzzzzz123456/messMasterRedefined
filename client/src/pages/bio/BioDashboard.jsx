@@ -90,7 +90,7 @@ export default function BioDashboard() {
             {(data?.listings || []).map((listing) => (
               <div key={listing._id} className="p-4 rounded-xl border border-border/40 flex items-center justify-between">
                 <div>
-                  <p className="text-primary font-semibold">{listing.messId?.name} · {listing.itemName}</p>
+                  <p className="text-primary font-semibold">{listing.messId?.name} · {String(listing.wasteType || '').replaceAll('_', ' ')}</p>
                   <p className="text-sm text-muted">{listing.messId?.location} · {listing.quantityAvailableKg} kg · ₹{listing.ratePerKg}/kg</p>
                 </div>
                 <Link to={`/bio/listing/${listing._id}`} className="text-xs px-3 py-1.5 rounded-lg bg-accent text-white">View</Link>

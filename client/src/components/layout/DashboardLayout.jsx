@@ -3,7 +3,7 @@ import { motion } from 'framer-motion'
 import { useQuery } from '@tanstack/react-query'
 import {
   LayoutDashboard, ChefHat, Brain, ClipboardList,
-  MessageSquare, Package, Settings, LogOut, Menu, Bell, HandCoins, Inbox, ShoppingBag, Recycle
+  MessageSquare, Package, Settings, LogOut, Menu, HandCoins, Inbox, ShoppingBag, Recycle
 } from 'lucide-react'
 import useAuthStore from '../../store/useAuthStore'
 import api from '../../api/axios'
@@ -28,9 +28,9 @@ const NAV = [
 export default function DashboardLayout() {
   const { user, logout, sidebarOpen, toggleSidebar } = useAuthStore()
   const navigate = useNavigate()
-  const { data: notif } = useQuery({
-    queryKey: ['mess-notification-count'],
-    queryFn: () => api.get('/requests/mess/notifications/count').then(r => r.data),
+  const { data: bioNotif } = useQuery({
+    queryKey: ['bioloop-mess-notification-count'],
+    queryFn: () => api.get('/bioloop-requests/mess/notifications/count').then(r => r.data),
     refetchInterval: 5000,
   })
 
@@ -122,13 +122,17 @@ export default function DashboardLayout() {
             <p className="text-xs text-muted">Real-time insights for hostel mess management.</p>
           </div>
           <div className="flex items-center gap-4">
-            <button
-              onClick={() => navigate('/dashboard/requests')}
-              className="relative p-2 rounded-xl text-muted hover:text-primary hover:bg-white/5 transition-colors border border-border/50"
-            >
-              <Bell size={18} />
-              {(notif?.count || 0) > 0 && <span className="absolute top-1.5 right-1.5 min-w-4 h-4 px-1 bg-red rounded-full text-[10px] leading-4 text-white text-center">{notif.count}</span>}
-            </button>
+            {(bioNotif?.count || 0) > 0 && (
+              <button
+                onClick={() => navigate('/dashboard/bioloop-requests')}
+                className="hidden md:flex items-center gap-2 rounded-xl border border-accent/30 px-3 py-2 text-xs text-accent-bright hover:text-primary hover:bg-white/5 transition-colors"
+              >
+                <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-accent text-white text-[10px] font-bold">
+                  {bioNotif.count}
+                </span>
+                Check BioLoop Requests
+              </button>
+            )}
             <div className="flex items-center gap-3 pl-4 border-l border-border/50">
               <div className="text-right hidden md:block">
                 <p className="text-sm font-semibold text-primary">{user?.name}</p>

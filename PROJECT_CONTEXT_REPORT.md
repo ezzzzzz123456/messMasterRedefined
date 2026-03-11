@@ -244,10 +244,13 @@
   - `status`
   - `isMarketplaceVisible`
 - used for dumped/expired food waste marketplace listings
+- current staff-side creation stores `wasteType = biodegradable_waste` and `itemName = Biodegradable Waste`
+- source split is retained in `autoTrackedExpiredKg` and `manualDumpedKg`
 
 ### BioWasteRequest
 - `listingId`, `messId`, `bioId`, `requestedQtyKg`, `offeredRatePerKg`, `status`
 - includes the same 10% platform-fee math pattern used by NGO requests
+- current BioLoop UI does not collect quantity; it automatically uses the full available listing quantity and persists it in `requestedQtyKg`
 
 ## 7. Environment Variables Used
 ### Backend: `server/.env`
@@ -281,6 +284,7 @@
   - `staff` -> `/dashboard/overview`
   - `student` -> `/student/feedback`
   - `ngo` -> `/ngo/dashboard`
+  - `bio` -> `/bio/dashboard`
 
 ## 9. Important Middleware
 - [auth.middleware.js](/Users/prakharsharma/Downloads/MessMaster/server/src/middleware/auth.middleware.js)
@@ -299,6 +303,7 @@
   - `Student Portal`
   - `BioLoop`
   - `About Us`
+- Landing-page `BioLoop` nav now routes directly to BioLoop authentication (`/login/bio`), not the public preview page.
 - Public portal cards on home:
   - Staff
   - NGO
@@ -336,6 +341,7 @@
   - pill-shaped bars
   - hover row highlighting
   - risk differentiation through purple intensity/glow, not alternate palette colors
+- The dashboard bell icon has been removed; BioLoop request prompts now rely on the dedicated inline staff alert only.
 
 ### Student portal
 - Student registration requires mess selection.
@@ -362,8 +368,19 @@
   - nearby waste map
   - 50 km filtered dumped/expired waste listings
   - request history
-- Staff can create BioLoop waste listings with a scheduled activation time.
+- BioLoop request detail page asks only for `Offer Rate`; the desired-quantity input was removed.
+- Staff can create BioLoop waste listings with a saved daily logging time.
+- Staff BioLoop listing form no longer asks for a custom item name or waste-type dropdown.
+- Staff BioLoop creation now uses:
+  - automatically tracked expired NGO waste
+  - manually entered dumped waste
+  - an automatically computed total biodegradable waste quantity
+- Raw datetime-local scheduling input was removed from the BioLoop form; scheduling uses the saved daily logging time.
+- `Save Time` stores the mess-level default end-of-day BioLoop logging time. When a listing is created:
+  - if the saved time is still in the future today, the listing is created as `scheduled`
+  - if the saved time has already passed today, the listing is activated immediately
 - Scheduler activates due listings and expires unclaimed listings after four hours.
+- Staff header now surfaces a BioLoop-specific request alert that routes users directly to the BioLoop request page when pending requests exist.
 
 ### Registration / geolocation
 - Mess registration keeps a text location field, geocodes it, and stores lat/lng + geo point.
@@ -374,6 +391,9 @@
 - Only approved active menu items may be used in:
   - staff food listings
   - waste log creation
+- NGO marketplace food listings now simulate expiry after 30 seconds for testing.
+- Expired NGO listings are removed from NGO feeds and become eligible for automatic BioLoop expired-waste accumulation.
+- Auto-tracked expired NGO waste currently carries forward across day changes until it is consumed into a BioLoop listing.
 - BioLoop nearby discovery uses a 50 km radius centered on bio-admin coordinates.
 - BioLoop listings auto-expire after four hours of active marketplace visibility if unclaimed.
 - Student feedback must be associated with a mess.
@@ -429,5 +449,6 @@
 ## 14. Known Issues / TODOs
 - `GET /api/v1/listings/public/all` still exists as a legacy all-listings feed; current NGO dashboard uses `/public/nearby` instead.
 - Existing older DB records created before geo support need `npm run migrate:location-geo` or re-registration to participate in nearby map filtering.
+- Auto-tracked expired NGO waste is not day-batched yet; it carries forward until a BioLoop listing consumes it.
 - Client bundle is large in production build and currently emits a chunk-size warning.
 - Nominatim rate limits should be respected; bulk migrations should be run sparingly.

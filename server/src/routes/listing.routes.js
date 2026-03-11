@@ -7,6 +7,7 @@ const MenuItem = require('../models/MenuItem');
 const Mess = require('../models/Mess');
 
 const NEARBY_RADIUS_METERS = 20000;
+const NGO_EXPIRY_MS = 30 * 1000;
 
 function getUserCoordinates(user) {
   if (Array.isArray(user?.geo?.coordinates) && user.geo.coordinates.length === 2) {
@@ -43,6 +44,7 @@ router.post('/', verifyToken, requireRole('staff'), async (req, res, next) => {
       quantityAvailableKg: Number(quantityAvailableKg),
       ratePerKg: Number(ratePerKg),
       notes: notes || '',
+      availableUntil: new Date(Date.now() + NGO_EXPIRY_MS),
       isActive: true,
     });
 
@@ -76,7 +78,16 @@ router.patch('/:id/toggle', verifyToken, requireRole('staff'), async (req, res, 
 
 router.get('/public/all', verifyToken, requireRole('ngo'), async (req, res, next) => {
   try {
-    const listings = await FoodListing.find({ isActive: true, quantityAvailableKg: { $gt: 0 } })
+    const now = new Date();
+    const listings = await FoodListing.find({
+      isActive: true,
+      quantityAvailableKg: { $gt: 0 },
+      $or: [
+        { availableUntil: { $exists: false } },
+        { availableUntil: null },
+        { availableUntil: { $gt: now } },
+      ],
+    })
       .sort({ createdAt: -1 })
       .populate('messId', 'name location phone latitude longitude geo')
       .populate('createdBy', 'name');
@@ -134,6 +145,11 @@ router.get('/public/nearby', verifyToken, requireRole('ngo'), async (req, res, n
       isActive: true,
       quantityAvailableKg: { $gt: 0 },
       messId: { $in: messIds },
+      $or: [
+        { availableUntil: { $exists: false } },
+        { availableUntil: null },
+        { availableUntil: { $gt: new Date() } },
+      ],
     })
       .sort({ createdAt: -1 })
       .populate('messId', 'name location phone latitude longitude geo')
@@ -173,7 +189,9 @@ router.get('/public/nearby', verifyToken, requireRole('ngo'), async (req, res, n
 router.get('/public/:id', verifyToken, requireRole('ngo'), async (req, res, next) => {
   try {
     const listing = await FoodListing.findById(req.params.id).populate('messId', 'name location phone latitude longitude geo adminContact representative pointOfContact');
-    if (!listing || !listing.isActive) return res.status(404).json({ error: 'Listing not found' });
+    if (!listing || !listing.isActive || (listing.availableUntil && listing.availableUntil <= new Date())) {
+      return res.status(404).json({ error: 'Listing not found' });
+    }
 
     const [reviewSummary] = await Feedback.aggregate([
       { $match: { messId: listing.messId._id } },

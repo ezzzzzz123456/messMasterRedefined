@@ -8,6 +8,9 @@ const foodListingSchema = new mongoose.Schema({
   quantityAvailableKg: { type: Number, required: true, min: 0 },
   ratePerKg: { type: Number, required: true, min: 0 },
   notes: { type: String, default: '' },
+  availableUntil: { type: Date, index: true },
+  expiredAt: { type: Date, index: true },
+  movedToBioLoopAt: { type: Date, index: true },
   isActive: { type: Boolean, default: true, index: true },
 }, { timestamps: true, strict: true });
 
