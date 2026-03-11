@@ -1,0 +1,1 @@
+{"indexes":[{"v":{"$numberInt":"2"},"key":{"_id":{"$numberInt":"1"}},"name":"_id_"},{"v":{"$numberInt":"2"},"key":{"messId":{"$numberInt":"1"},"createdAt":{"$numberInt":"-1"}},"name":"messId_1_createdAt_-1","background":true}],"uuid":"241fc5c488f543b08bcd9b10627af130","collectionName":"feedbacks","type":"collection"}
